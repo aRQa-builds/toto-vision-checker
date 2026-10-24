@@ -16,6 +16,7 @@ P2-03 go-live: install Python on Grayskull, run tests (149), run `tools\setup-sc
 3. P3-01 Google Vision OCR, then P3-02 ticket parser.
 
 ## Blockers
+- None on the remote: public repo live (aRQa-builds/toto-vision-checker), 2026-10-25.
 - Ticket photos: needed for P3-02, P4-09 (draw no. on ticket?), P4-10.
 - Permission from Singapore Pools: gates P2-04 backfill, paid tier, ads, Play.
 

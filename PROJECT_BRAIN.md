@@ -6,6 +6,7 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - **Stack**: Python 3.10+ stdlib core (`lottery_checker/`), pytest; web app later (Arcade Drum UI, PWA).
 - **Deploy**: toto.zenqi.cc (planned); capture runs on Grayskull (Win 11 64-bit, Task Scheduler).
 - **Home**: D:\SakuraHydra\HavenPalms\Toto_Vision_Checker (mirror: claude.ai project "Toto OCR Check").
+- **Remote**: https://github.com/aRQa-builds/toto-vision-checker (PUBLIC, `main`, since 2026-10-25). Ticket photos, captured Singapore Pools pages (`tests/fixtures/*.jpg`, `*.html`, `screens/`) and `data/` are git-ignored and stay local; never add them. Public repo: no secrets, no `.env`.
 - **Version**: v0.1 (matcher + capture, 149 tests).
 
 ## Architecture Decisions
