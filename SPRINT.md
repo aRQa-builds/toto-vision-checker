@@ -27,3 +27,34 @@ P2-03 go-live: install Python on Grayskull, run tests (149), run `tools\setup-sc
 
 ## Session Notes
 Rules gap closed, matcher built (135→149 tests), SP terms reviewed (scraping banned, 7 repos scrape anyway), user chose free non-monetised capture with citation. Parser on real pages (4068, 4D 5500), Windows scheduler scripts. Hand-off reveal designs A2/A3 on canvas.
+
+## Session 1 close (2026-10-25)
+
+### Done
+- Put the repo under git (nested repo, branch `main`, source-only `.gitignore`) and into the HavenPalms index and inventory.
+- Vault: historian node, Session_Log_Hub and Session_01 created under HavenPalms_INDEX.
+- Recorded the remote in PROJECT_BRAIN.md and SPRINT.md.
+- Published to GitHub: public, aRQa-builds/toto-vision-checker (`b3bc029`, then `60cf89c`). Ticket photos, captured Singapore Pools pages and `tests/fixtures/screens/` removed from the commit before publishing.
+- INCIDENT: a first push went out with those files before the cleanup ran, so the repo was briefly public with commit `4900cb3`. It was deleted and recreated clean. Lesson: build and verify the file list before creating a public remote; never chain a push after a step whose failure is not checked.
+
+Tally: LEAD DIRECT 1 (onboarding is git and inventory setup, no gated code slice, no Hand attempt). LOCAL 0 · L1 0 · L2 0 · SPEC FAULT 0. `Delegable: 0 of 0`.
+Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0). Hand lessons landed: 0 (no corrections to learn from).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Ticket photos needed for P3-02, P4-09, P4-10. |
+| decision | Singapore Pools permission gates P2-04 backfill, paid tier, ads, Play listing. |
+| input | P2-03 go-live on Grayskull; P2-05 results@zenqi.cc alias. |
+
+### Next
+Re-enter Sprint 1 at P3-01 Google Vision OCR, then P3-02 ticket parser (see Task Queue above).
+
+### Merged
+None.
+
+### Deployed
+None.
+
+### Discoveries
+None.
