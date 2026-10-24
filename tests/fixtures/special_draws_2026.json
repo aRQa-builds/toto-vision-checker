@@ -1,0 +1,209 @@
+{
+  "_about": "P0-04 samples: every 2026 TOTO special draw found so far, in the same shape as data/draws/toto/<n>.json. Dev/test fixtures only, not product data.",
+  "_sources": "Draw numbers and Group 1-7 tables: LotteryExtreme.com per-draw pages (third party, read 21 Oct 2026). Group 1 and Group 2 cross-checked against Mothership, MustShareNews, The Independent SG and The Star news reports. Re-check against the official Singapore Pools page before promoting any of these to a golden test.",
+  "_coverage": "Whole of 2026 to 19 Oct checked (21 Oct). Jan-Feb and 9 Jul-19 Oct from date lists; 2 Mar-2 Jul from every second Monday's previous/next links (all Thursdays, draw numbers +4 per fortnight: 4163 on 9 Mar to 4195 on 29 Jun). Only these four draws fell off Mon/Thu, all Fridays replacing that week's Thursday; no extra draws were added.",
+  "draws": [
+    {
+      "game": "toto",
+      "special": "New Year Draw",
+      "draw_no": 4144,
+      "draw_date": "2026-01-02",
+      "weekday": "Fri",
+      "replaces": "Thu 2026-01-01 (prev Mon 29 Dec, next Mon 5 Jan)",
+      "advertised_group1": 5000000,
+      "winning": [
+        11,
+        18,
+        20,
+        32,
+        38,
+        39
+      ],
+      "additional": 34,
+      "group1_prize_pool": null,
+      "shares": {
+        "1": {
+          "amount": 2653368,
+          "winners": 3
+        },
+        "2": {
+          "amount": 98578,
+          "winners": 17
+        },
+        "3": {
+          "amount": 1337,
+          "winners": 717
+        },
+        "4": {
+          "amount": 356,
+          "winners": 1471
+        },
+        "5": {
+          "amount": 50,
+          "winners": 30529
+        },
+        "6": {
+          "amount": 25,
+          "winners": 39692
+        },
+        "7": {
+          "amount": 10,
+          "winners": 545195
+        }
+      },
+      "expected_rules_version": "toto-2022"
+    },
+    {
+      "game": "toto",
+      "special": "Reunion Draw",
+      "draw_no": 4156,
+      "draw_date": "2026-02-13",
+      "weekday": "Fri",
+      "replaces": "Thu 2026-02-12 (prev Mon 9 Feb, next Mon 16 Feb)",
+      "advertised_group1": 5000000,
+      "winning": [
+        10,
+        15,
+        25,
+        43,
+        45,
+        49
+      ],
+      "additional": 4,
+      "group1_prize_pool": 6188268,
+      "shares": {
+        "1": {
+          "amount": 6188268,
+          "winners": 1
+        },
+        "2": {
+          "amount": 86853,
+          "winners": 15
+        },
+        "3": {
+          "amount": 1795,
+          "winners": 499
+        },
+        "4": {
+          "amount": 379,
+          "winners": 1292
+        },
+        "5": {
+          "amount": 50,
+          "winners": 26860
+        },
+        "6": {
+          "amount": 25,
+          "winners": 35730
+        },
+        "7": {
+          "amount": 10,
+          "winners": 492757
+        }
+      },
+      "expected_rules_version": "toto-2022"
+    },
+    {
+      "game": "toto",
+      "special": "Hong Bao Draw",
+      "draw_no": 4160,
+      "draw_date": "2026-02-27",
+      "weekday": "Fri",
+      "replaces": "Thu 2026-02-26 (prev Mon 23 Feb, next Mon 2 Mar = 4161, first 2026-rules draw)",
+      "advertised_group1": 12000000,
+      "winning": [
+        5,
+        9,
+        20,
+        23,
+        45,
+        46
+      ],
+      "additional": 7,
+      "group1_prize_pool": 12000001,
+      "shares": {
+        "1": {
+          "amount": 4000000,
+          "winners": 3
+        },
+        "2": {
+          "amount": 77132,
+          "winners": 32
+        },
+        "3": {
+          "amount": 1566,
+          "winners": 1084
+        },
+        "4": {
+          "amount": 286,
+          "winners": 3244
+        },
+        "5": {
+          "amount": 50,
+          "winners": 55832
+        },
+        "6": {
+          "amount": 25,
+          "winners": 86184
+        },
+        "7": {
+          "amount": 10,
+          "winners": 993740
+        }
+      },
+      "expected_rules_version": "toto-2022",
+      "notes": "Last draw before the 2026 rules (cutover edge case). Pool 12,000,001 / 3 = 4,000,000.33, paid 4,000,000: rounding per cl. 5.7. One Group 1 winner was an iTOTO System 12 in 28 units, so each unit = 4,000,000 / 28 = 142,857 (news figure); real Group TOTO/iTOTO sample."
+    },
+    {
+      "game": "toto",
+      "special": "National Day Draw",
+      "draw_no": 4206,
+      "draw_date": "2026-08-07",
+      "weekday": "Fri",
+      "replaces": "Thu 2026-08-06 (prev Mon 3 Aug, next Mon 10 Aug)",
+      "advertised_group1": 5000000,
+      "winning": [
+        5,
+        7,
+        30,
+        33,
+        36,
+        46
+      ],
+      "additional": 44,
+      "group1_prize_pool": null,
+      "shares": {
+        "1": {
+          "amount": 1711507,
+          "winners": 3
+        },
+        "2": {
+          "amount": 135119,
+          "winners": 8
+        },
+        "3": {
+          "amount": 1461,
+          "winners": 509
+        },
+        "4": {
+          "amount": 358,
+          "winners": 1133
+        },
+        "5": {
+          "amount": 50,
+          "winners": 24370
+        },
+        "6": {
+          "amount": 25,
+          "winners": 29897
+        },
+        "7": {
+          "amount": 10,
+          "winners": 433859
+        }
+      },
+      "expected_rules_version": "toto-2026-03-02",
+      "notes": "Advertised amount from the usual National Day Draw pattern; 2026 announcement not read. Group 1 total 3 x 1,711,507 = 5,134,521."
+    }
+  ]
+}

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>4D hand-off reveal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0D0A1E}
+button{font-family:inherit}
+.f-btn{transition:transform .15s ease}
+.f-btn:hover{transform:scale(1.02)}
+.f-btn:active{transform:scale(.96)}
+@keyframes f-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+@keyframes f-pulse{0%{box-shadow:0 0 0 0 rgba(54,226,208,.55)}100%{box-shadow:0 0 0 20px rgba(54,226,208,0)}}
+@keyframes f-pulsey{0%{box-shadow:0 0 0 0 rgba(255,216,74,.55)}100%{box-shadow:0 0 0 20px rgba(255,216,74,0)}}
+@keyframes f-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+@keyframes f-blink{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes f-dot{0%,80%,100%{transform:scale(.5);opacity:.35}40%{transform:scale(1);opacity:1}}
+@keyframes f-sheet{0%{transform:translateY(120%)}70%{transform:translateY(-4%)}100%{transform:translateY(0)}}
+@keyframes f-beam{0%{top:4%}100%{top:94%}}
+@keyframes f-rollbig{0%{transform:translateY(0)}100%{transform:translateY(-288px)}}
+@keyframes f-rollsm{0%{transform:translateY(0)}100%{transform:translateY(-176px)}}
+@keyframes f-lock{0%{box-shadow:0 0 0 0 rgba(54,226,208,.9)}100%{box-shadow:0 0 0 10px rgba(54,226,208,0)}}
+@keyframes f-hit{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes f-glowy{0%,100%{box-shadow:0 0 0 0 rgba(255,216,74,0)}50%{box-shadow:0 0 14px 3px rgba(255,216,74,.7)}}
+@keyframes f-ring{0%{transform:scale(.5);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+@keyframes f-badge{0%{transform:scale(0) rotate(-24deg)}70%{transform:scale(1.14) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes f-burst{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-110px) scale(.3);opacity:0}}
+@keyframes f-in{0%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 24px 20px 20px; background: #0D0A1E; color: #F4F1FF; font-family: 'DM Mono', monospace; overflow: hidden">
+  <div style="position: absolute; top: 90px; right: -40px; width: 130px; height: 130px; border-radius: 50%; background: #1D1747; animation: f-float 5s ease-in-out infinite"></div>
+  <div style="position: absolute; top: 500px; left: -50px; width: 110px; height: 110px; border-radius: 50%; background: #2A1646; animation: f-float 6.5s ease-in-out infinite; animation-delay: -2s"></div>
+
+  <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 14px; height: 14px; border-radius: 4px; background: #FF4FA3"></div>
+        <span style="font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.08em">4D CHECK</span>
+      </div>
+      <span style="font-size: 12px; letter-spacing: 0.08em; color: #9A93C9">{{stepLabel}}</span>
+    </div>
+
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+        <div style="flex: 1; height: 4px; border-radius: 2px; transition: background 0.4s; {{s.style}}"></div>
+      </sc-for>
+    </div>
+
+    <h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; line-height: 1.15">{{headline}}</h1>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; width: 350px; padding: 9px 14px; border-radius: 16px; background: #17123A; border: 1.5px solid #2E2760">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 11px; letter-spacing: 0.1em; color: #9A93C9">READ FROM YOUR TICKET</span>
+        <span style="font-size: 14px; font-weight: 500">4D · Draw [5xxx] · Sat</span>
+      </div>
+      <span style="font-size: 11px; letter-spacing: 0.08em; color: #36E2D0">3 BETS · $13</span>
+    </div>
+
+    <sc-if value="{{isSealed}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="width: 350px; height: 200px; box-sizing: border-box; border-radius: 28px; background: #17123A; border: 1.5px dashed #3B3270; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#FFD84A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="animation: f-shake 2.4s ease-in-out infinite">
+            <rect x="4" y="10" width="16" height="11" rx="2.5"></rect>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            <circle cx="12" cy="15.5" r="1.5"></circle>
+          </svg>
+          <span style="font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700">23 numbers sealed</span>
+          <span style="font-size: 12px; color: #9A93C9; text-align: center; max-width: 260px">Top 3, 10 Starter, 10 Consolation. Unlock them on the official page.</span>
+        </div>
+        <button class="f-btn" onClick="{{goOfficial}}" style="width: 350px; height: 64px; border: none; border-radius: 32px; background: #FFD84A; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; animation: f-pulsey 1.6s ease-out infinite">Unlock on official page</button>
+        <div style="text-align: center; font-size: 11px; color: #9A93C9">Opens singaporepools.com.sg at this draw, in a new tab</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isAway}}" hint-placeholder-val="{{ false }}">
+      <div style="width: 350px; height: 200px; box-sizing: border-box; border-radius: 28px; background: #17123A; border: 1.5px solid #2E2760; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px">
+        <div style="display: flex; gap: 10px">
+          <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: f-dot 1.2s ease-in-out infinite"></div>
+          <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: f-dot 1.2s ease-in-out infinite; animation-delay: 0.15s"></div>
+          <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: f-dot 1.2s ease-in-out infinite; animation-delay: 0.3s"></div>
+        </div>
+        <span style="font-size: 13px">Screenshot the full results table</span>
+        <span style="font-size: 11px; color: #9A93C9">Top 3 down to Consolation, then come back</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{showBoard}}" hint-placeholder-val="{{ false }}">
+      <div style="position: relative; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; width: 350px; padding: 12px; border-radius: 22px; background: #17123A; border: 1.5px solid #2E2760; overflow: hidden; animation: f-in 0.4s ease-out both">
+        <sc-for list="{{top}}" as="p" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <span style="width: 56px; font-size: 11px; letter-spacing: 0.08em; {{p.labelStyle}}">{{p.label}}</span>
+            <div style="display: flex; gap: 5px">
+              <sc-for list="{{p.digits}}" as="d" hint-placeholder-count="4">
+                <div style="width: 34px; height: 36px; border-radius: 8px; overflow: hidden; transition: background 0.4s; {{d.box}}">
+                  <div style="display: flex; flex-direction: column; {{d.roll}}">
+                    <sc-for list="{{d.strip}}" as="n" hint-placeholder-count="9">
+                      <div style="width: 34px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700; flex: none">{{n}}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="width: 44px; text-align: right; font-size: 11px; color: #9A93C9">{{p.prize}}</span>
+          </div>
+        </sc-for>
+
+        <sc-for list="{{grids}}" as="g" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 5px">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.08em; color: #9A93C9">
+              <span>{{g.label}}</span>
+              <span>{{g.prize}}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px">
+              <sc-for list="{{g.cells}}" as="c" hint-placeholder-count="10">
+                <div style="height: 22px; border-radius: 6px; overflow: hidden; transition: background 0.4s, color 0.4s; {{c.box}}">
+                  <div style="display: flex; flex-direction: column; {{c.roll}}">
+                    <sc-for list="{{c.strip}}" as="n" hint-placeholder-count="9">
+                      <div style="height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex: none">{{n}}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{isReading}}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; left: 8px; right: 8px; height: 3px; border-radius: 2px; background: #36E2D0; box-shadow: 0 0 18px 4px rgba(54,226,208,0.6); animation: f-beam 0.9s ease-in-out infinite alternate"></div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isConfirm}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; animation: f-in 0.4s ease-out 0.2s both">
+        <button class="f-btn" onClick="{{reset}}" style="width: 110px; height: 54px; border-radius: 27px; border: 1.5px solid #3B3270; background: transparent; color: #F4F1FF; font-size: 13px; cursor: pointer">Edit</button>
+        <button class="f-btn" onClick="{{reveal}}" style="flex: 1; height: 54px; border: none; border-radius: 27px; background: #36E2D0; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; animation: f-pulse 1.6s ease-out infinite">Reveal my result</button>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-direction: column; gap: 7px">
+      <sc-for list="{{bets}}" as="b" hint-placeholder-count="3">
+        <div style="display: flex; align-items: center; gap: 10px; box-sizing: border-box; width: 350px; padding: 8px 12px; border-radius: 16px; background: #17123A; border: 1.5px solid {{b.border}}; transition: border-color 0.4s">
+          <span style="width: 54px; padding: 4px 0; border-radius: 10px; text-align: center; font-size: 10px; letter-spacing: 0.08em; background: #231D55; color: #C9C3F2">{{b.kind}}</span>
+          <div style="display: flex; flex-direction: column; gap: 1px; flex: 1">
+            <span style="font-family: 'Unbounded', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.06em; {{b.numStyle}}">{{b.num}}</span>
+            <span style="font-size: 10px; color: #9A93C9">{{b.stake}}</span>
+          </div>
+          <span style="font-size: 11px; font-weight: 500; text-align: right; {{b.tagStyle}}">{{b.tag}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isReveal}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 16px; animation: f-in 0.4s ease-out both">
+        <div style="position: relative; width: 74px; height: 74px; flex: none">
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2px solid #FFD84A; animation: f-ring 1.6s ease-out 0.2s both"></div>
+          <sc-for list="{{dots}}" as="d" hint-placeholder-count="10">
+            <div style="position: absolute; left: 50%; top: 50%; width: 0; height: 0; {{d.wrap}}">
+              <div style="width: 7px; height: 7px; margin: -3px 0 0 -3px; border-radius: 50%; {{d.dot}}"></div>
+            </div>
+          </sc-for>
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background: #FFD84A; color: #0D0A1E; display: flex; align-items: center; justify-content: center; animation: f-badge 0.7s cubic-bezier(0.2,1.4,0.4,1) 0.15s both">
+            <span style="font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700">$370</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex: 1">
+          <span style="font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700">2 of 3 bets win</span>
+          <span style="font-size: 11px; color: #9A93C9">4D prizes are fixed, so this is your full payout</span>
+          <button class="f-btn" onClick="{{reset}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid #36E2D0; background: transparent; color: #36E2D0; font-size: 12px; cursor: pointer">Check another</button>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{showSheet}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; box-sizing: border-box; padding: 22px 20px 26px; border-radius: 28px 28px 0 0; background: #1D1747; border-top: 1.5px solid #3B3270; display: flex; flex-direction: column; gap: 12px; animation: f-sheet 0.6s cubic-bezier(0.2,1.2,0.4,1) both">
+      <div style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #3B3270"></div>
+      <span style="font-family: 'Unbounded', sans-serif; font-size: 17px; font-weight: 700">Welcome back. Got the table?</span>
+      <span style="font-size: 12px; color: #9A93C9">Share the screenshot here, or drop it in. We only read what you upload; we never fetch the official site.</span>
+      <button class="f-btn" onClick="{{gotShot}}" style="height: 58px; border: none; border-radius: 29px; background: #36E2D0; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; animation: f-pulse 1.6s ease-out infinite">Use my screenshot</button>
+      <button class="f-btn" onClick="{{typeIn}}" style="height: 48px; border-radius: 24px; border: 1.5px solid #3B3270; background: transparent; color: #F4F1FF; font-size: 13px; cursor: pointer">Type the numbers instead</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = { phase: 'sealed', sheet: false };
+
+  clear() {
+    clearTimeout(this._t1);
+  }
+
+  goOfficial = () => {
+    this.clear();
+    this.setState({ phase: 'away', sheet: false });
+    this._t1 = setTimeout(() => this.setState({ sheet: true }), 1600);
+  };
+
+  gotShot = () => {
+    this.clear();
+    this.setState({ phase: 'reading', sheet: false });
+    this._t1 = setTimeout(() => this.setState({ phase: 'confirm' }), 3400);
+  };
+
+  typeIn = () => {
+    this.clear();
+    this.setState({ phase: 'confirm', sheet: false });
+  };
+
+  reveal = () => {
+    this.clear();
+    this.setState({ phase: 'reveal' });
+  };
+
+  reset = () => {
+    this.clear();
+    this.setState({ phase: 'sealed', sheet: false });
+  };
+
+  componentWillUnmount() {
+    this.clear();
+  }
+
+  renderVals() {
+    const phase = this.state.phase;
+    const rolling = phase === 'reading';
+    const revealed = phase === 'reveal';
+
+    // Sample draw (not a real result).
+    const first = '9036', second = '1527', third = '6410';
+    const starter = ['5872', '2205', '7731', '0459', '8813', '3366', '1980', '4127', '6694', '2058'];
+    const consol = ['0718', '9241', '3305', '7782', '1469', '5530', '8027', '2196', '6613', '4475'];
+    const hitNums = { '5872': true, '0718': true };
+
+    const mkStrip = (final, seed, len) => {
+      const s = [];
+      for (let k = 0; k < 8; k++) {
+        let v = '';
+        for (let j = 0; j < len; j++) v += String((seed * 7 + k * 3 + j * 5) % 10);
+        s.push(v);
+      }
+      s.push(final);
+      return s;
+    };
+
+    const topDefs = [
+      { label: '1ST', n: first, prize: '$2,000' },
+      { label: '2ND', n: second, prize: '$1,000' },
+      { label: '3RD', n: third, prize: '$490' }
+    ];
+    const top = topDefs.map((p, pi) => ({
+      label: p.label,
+      prize: p.prize,
+      labelStyle: 'color:' + (pi === 0 ? '#FFD84A' : '#C9C3F2') + ';',
+      digits: p.n.split('').map((ch, di) => {
+        const delay = 200 + pi * 380 + di * 110;
+        return {
+          strip: mkStrip(ch, pi * 4 + di + 3, 1),
+          roll: rolling ? 'animation:f-rollbig 1.2s cubic-bezier(.15,.7,.25,1) both;animation-delay:' + delay + 'ms;' : 'transform:translateY(-288px);',
+          box: 'background:' + (pi === 0 ? '#FFD84A' : '#E9E5FF') + ';color:#0D0A1E;' + (rolling ? 'animation:f-lock .6s ease-out both;animation-delay:' + (delay + 1200) + 'ms;' : '')
+        };
+      })
+    }));
+
+    const mkGrid = (label, prize, list, base) => ({
+      label,
+      prize,
+      cells: list.map((n, i) => {
+        const delay = base + i * 90;
+        const hit = revealed && hitNums[n];
+        return {
+          strip: mkStrip(n, i + base / 100, 4),
+          roll: rolling ? 'animation:f-rollsm .9s cubic-bezier(.15,.7,.25,1) both;animation-delay:' + delay + 'ms;' : 'transform:translateY(-176px);',
+          box: hit
+            ? 'background:#FFD84A;color:#0D0A1E;animation:f-hit .6s cubic-bezier(.2,1.4,.4,1) .2s both,f-glowy 1.8s ease-in-out .8s infinite;'
+            : 'background:#231D55;color:#E9E5FF;'
+        };
+      })
+    });
+    const grids = [
+      mkGrid('STARTER', 'Big $250', starter, 1400),
+      mkGrid('CONSOLATION', 'Big $60', consol, 2200)
+    ];
+
+    const betDefs = [
+      { kind: 'ORD', num: '0718', stake: 'Big $2 · cost $2', win: 'CONSOLATION · $120' },
+      { kind: 'ROLL', num: '58R2', stake: 'Big $1 × 10 · cost $10', win: '5872 STARTER · $250' },
+      { kind: 'iBET', num: '3149', stake: 'Big $1 · cost $1', win: '' }
+    ];
+    const bets = betDefs.map((b, i) => {
+      let tag = 'SEALED', tagStyle = 'color:#6E679E;', border = '#2E2760', numStyle = 'color:#C9C3F2;';
+      if (phase === 'confirm') {
+        tag = 'READY';
+        tagStyle = 'color:#36E2D0;animation:f-blink 1s ease-in-out infinite;';
+      }
+      if (revealed) {
+        if (b.win) {
+          tag = b.win;
+          tagStyle = 'color:#FFD84A;animation:f-in .4s ease-out both;animation-delay:' + (300 + i * 180) + 'ms;';
+          border = 'rgba(54,226,208,.6)';
+          numStyle = 'color:#36E2D0;';
+        } else {
+          tag = 'NO PRIZE';
+          tagStyle = 'color:#8A83BF;';
+        }
+      }
+      return { kind: b.kind, num: b.num, stake: b.stake, tag, tagStyle, border, numStyle };
+    });
+
+    const stepIdx = { sealed: 0, away: 1, reading: 2, confirm: 2, reveal: 3 }[phase];
+    const steps = [0, 1, 2, 3].map((i) => ({ style: i <= stepIdx ? 'background:#36E2D0;' : 'background:#231D55;' }));
+
+    const colors = ['#FFD84A', '#36E2D0', '#FF4FA3'];
+    const dots = [];
+    for (let i = 0; i < 10; i++) {
+      dots.push({
+        wrap: 'transform:rotate(' + i * 36 + 'deg);',
+        dot: 'background:' + colors[i % 3] + ';animation:f-burst .9s ease-out .35s both;'
+      });
+    }
+
+    const labels = { sealed: 'STEP 1 · SEALED', away: 'STEP 2 · OFFICIAL PAGE', reading: 'STEP 3 · READING', confirm: 'STEP 3 · CONFIRM', reveal: 'STEP 4 · REVEAL' };
+    const heads = {
+      sealed: 'Your bets are in. Unlock the draw.',
+      away: 'Grab the results table.',
+      reading: 'Rolling in the draw…',
+      confirm: 'Does this match the official page?',
+      reveal: 'Two hits!'
+    };
+
+    return {
+      stepLabel: labels[phase],
+      headline: heads[phase],
+      steps,
+      isSealed: phase === 'sealed',
+      isAway: phase === 'away',
+      isReading: rolling,
+      isConfirm: phase === 'confirm',
+      isReveal: revealed,
+      showBoard: rolling || phase === 'confirm' || revealed,
+      showSheet: phase === 'away' && this.state.sheet,
+      top,
+      grids,
+      bets,
+      dots,
+      goOfficial: this.goOfficial,
+      gotShot: this.gotShot,
+      typeIn: this.typeIn,
+      reveal: this.reveal,
+      reset: this.reset
+    };
+  }
+}
+</script>
+</body>
+</html>

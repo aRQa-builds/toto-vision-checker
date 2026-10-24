@@ -1,0 +1,30 @@
+# Toto Vision Checker - what stays OUT of git
+
+# Secrets
+.env
+*.key
+*.pem
+
+# Runtime data. Captured results are Singapore Pools content ("we do not own this data",
+# permission pending - PROJECT_BRAIN.md), and all of it regenerates from the scheduled capture.
+data/
+
+# Personal ticket photos
+web/samples/
+
+# Logs, caches, local state
+logs/
+__pycache__/
+*.pyc
+*.log
+.pytest_cache/
+.venv/
+node_modules/
+.wrangler/
+_backup_before_*/
+
+# Public repo: personal ticket photos and Singapore Pools page captures stay local
+tests/fixtures/**/*.jpg
+tests/fixtures/**/*.html
+tests/fixtures/*.html
+tests/fixtures/screens/

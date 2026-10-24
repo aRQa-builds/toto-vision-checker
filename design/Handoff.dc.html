@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Official hand-off reveal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<style>
+body{margin:0;background:#0D0A1E}
+button{font-family:inherit}
+.h-btn{transition:transform .15s ease}
+.h-btn:hover{transform:scale(1.02)}
+.h-btn:active{transform:scale(.96)}
+@keyframes h-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+@keyframes h-pulse{0%{box-shadow:0 0 0 0 rgba(54,226,208,.55)}100%{box-shadow:0 0 0 20px rgba(54,226,208,0)}}
+@keyframes h-pulsey{0%{box-shadow:0 0 0 0 rgba(255,216,74,.55)}100%{box-shadow:0 0 0 20px rgba(255,216,74,0)}}
+@keyframes h-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+@keyframes h-blink{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes h-dot{0%,80%,100%{transform:scale(.5);opacity:.35}40%{transform:scale(1);opacity:1}}
+@keyframes h-sheet{0%{transform:translateY(120%)}70%{transform:translateY(-4%)}100%{transform:translateY(0)}}
+@keyframes h-beam{0%{top:4%}100%{top:94%}}
+@keyframes h-roll{0%{transform:translateY(0)}100%{transform:translateY(-320px)}}
+@keyframes h-lock{0%{box-shadow:0 0 0 0 rgba(54,226,208,.9)}100%{box-shadow:0 0 0 12px rgba(54,226,208,0)}}
+@keyframes h-hit{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes h-glow{0%,100%{box-shadow:0 0 0 0 rgba(54,226,208,0)}50%{box-shadow:0 0 16px 3px rgba(54,226,208,.65)}}
+@keyframes h-glowy{0%,100%{box-shadow:0 0 0 0 rgba(255,216,74,0)}50%{box-shadow:0 0 16px 3px rgba(255,216,74,.7)}}
+@keyframes h-ring{0%{transform:scale(.5);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+@keyframes h-badge{0%{transform:scale(0) rotate(-24deg)}70%{transform:scale(1.14) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes h-burst{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(.3);opacity:0}}
+@keyframes h-in{0%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; padding: 24px 20px 20px; background: #0D0A1E; color: #F4F1FF; font-family: 'DM Mono', monospace; overflow: hidden">
+  <div style="position: absolute; top: 90px; right: -40px; width: 130px; height: 130px; border-radius: 50%; background: #1D1747; animation: h-float 5s ease-in-out infinite"></div>
+  <div style="position: absolute; top: 470px; left: -50px; width: 110px; height: 110px; border-radius: 50%; background: #2A1646; animation: h-float 6.5s ease-in-out infinite; animation-delay: -2s"></div>
+  <div style="position: absolute; bottom: 70px; right: 24px; width: 70px; height: 70px; border-radius: 50%; background: #123446; animation: h-float 4.5s ease-in-out infinite; animation-delay: -1s"></div>
+
+  <div style="position: relative; z-index: 1; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 14px; height: 14px; border-radius: 50%; background: #FFD84A"></div>
+        <span style="font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.08em">TOTO CHECK</span>
+      </div>
+      <span style="font-size: 12px; letter-spacing: 0.08em; color: #9A93C9">{{stepLabel}}</span>
+    </div>
+
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+        <div style="flex: 1; height: 4px; border-radius: 2px; transition: background 0.4s; {{s.style}}"></div>
+      </sc-for>
+    </div>
+
+    <h1 style="margin: 0; font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 23px; line-height: 1.15">{{headline}}</h1>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; width: 350px; padding: 10px 14px; border-radius: 16px; background: #17123A; border: 1.5px solid #2E2760">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 11px; letter-spacing: 0.1em; color: #9A93C9">READ FROM YOUR TICKET</span>
+        <span style="font-size: 14px; font-weight: 500">TOTO · Draw [4xxx] · Thu</span>
+      </div>
+      <span style="font-size: 11px; letter-spacing: 0.08em; color: #36E2D0">3 ROWS</span>
+    </div>
+
+    <sc-if value="{{isSealed}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="position: relative; width: 350px; height: 210px; box-sizing: border-box; border-radius: 28px; background: #17123A; border: 1.5px dashed #3B3270; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#FFD84A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="animation: h-shake 2.4s ease-in-out infinite">
+            <rect x="4" y="10" width="16" height="11" rx="2.5"></rect>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+            <circle cx="12" cy="15.5" r="1.5"></circle>
+          </svg>
+          <span style="font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700">Result sealed</span>
+          <span style="font-size: 12px; color: #9A93C9; text-align: center; max-width: 260px">Your numbers are locked in. Unlock the draw on the official page.</span>
+        </div>
+        <button class="h-btn" onClick="{{goOfficial}}" style="width: 350px; height: 64px; border: none; border-radius: 32px; background: #FFD84A; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; animation: h-pulsey 1.6s ease-out infinite">Unlock on official page</button>
+        <div style="text-align: center; font-size: 11px; color: #9A93C9">Opens singaporepools.com.sg at this draw, in a new tab</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isAway}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="width: 350px; height: 210px; box-sizing: border-box; border-radius: 28px; background: #17123A; border: 1.5px solid #2E2760; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px">
+          <div style="display: flex; gap: 10px">
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: h-dot 1.2s ease-in-out infinite"></div>
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: h-dot 1.2s ease-in-out infinite; animation-delay: 0.15s"></div>
+            <div style="width: 14px; height: 14px; border-radius: 50%; background: #36E2D0; animation: h-dot 1.2s ease-in-out infinite; animation-delay: 0.3s"></div>
+          </div>
+          <span style="font-size: 13px">Screenshot the winning numbers</span>
+          <span style="font-size: 11px; color: #9A93C9">then come back here</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isReading}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="position: relative; width: 350px; height: 150px; box-sizing: border-box; padding: 16px; border-radius: 20px; background: #E9E5FF; overflow: hidden; display: flex; flex-direction: column; gap: 10px">
+          <div style="height: 10px; width: 45%; border-radius: 5px; background: #B9B2E8"></div>
+          <div style="display: flex; gap: 8px">
+            <sc-for list="{{shotBalls}}" as="x" hint-placeholder-count="7">
+              <div style="width: 30px; height: 30px; border-radius: 50%; {{x}}"></div>
+            </sc-for>
+          </div>
+          <div style="height: 8px; width: 100%; border-radius: 4px; background: #CFC9F2"></div>
+          <div style="height: 8px; width: 80%; border-radius: 4px; background: #CFC9F2"></div>
+          <div style="position: absolute; left: 10px; right: 10px; height: 3px; border-radius: 2px; background: #36E2D0; box-shadow: 0 0 18px 4px rgba(54,226,208,0.6); animation: h-beam 0.9s ease-in-out infinite alternate"></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{showCaptured}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 8px; animation: h-in 0.4s ease-out both">
+        <span style="font-size: 11px; letter-spacing: 0.1em; color: #9A93C9">CAPTURED WINNING NUMBERS · SAMPLE</span>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <sc-for list="{{drums}}" as="d" hint-placeholder-count="6">
+            <div style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: #36E2D0; color: #0D0A1E; {{d.lock}}">
+              <div style="display: flex; flex-direction: column; {{d.roll}}">
+                <sc-for list="{{d.strip}}" as="n" hint-placeholder-count="9">
+                  <div style="width: 38px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; flex: none">{{n}}</div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <span style="font-size: 16px; color: #9A93C9">+</span>
+          <div style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: #FFD84A; color: #0D0A1E; {{addDrum.lock}}">
+            <div style="display: flex; flex-direction: column; {{addDrum.roll}}">
+              <sc-for list="{{addDrum.strip}}" as="n" hint-placeholder-count="9">
+                <div style="width: 38px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; flex: none">{{n}}</div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isConfirm}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; gap: 10px; animation: h-in 0.4s ease-out 0.2s both">
+        <button class="h-btn" onClick="{{reset}}" style="width: 120px; height: 56px; border-radius: 28px; border: 1.5px solid #3B3270; background: transparent; color: #F4F1FF; font-size: 13px; cursor: pointer">Edit</button>
+        <button class="h-btn" onClick="{{reveal}}" style="flex: 1; height: 56px; border: none; border-radius: 28px; background: #36E2D0; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; animation: h-pulse 1.6s ease-out infinite">Reveal my result</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isReveal}}" hint-placeholder-val="{{ false }}">
+      <div style="position: relative; width: 350px; height: 150px; box-sizing: border-box; border-radius: 24px; background: #17123A; border: 1.5px solid #2E2760; display: flex; align-items: center; gap: 18px; padding: 0 22px; overflow: hidden">
+        <div style="position: relative; width: 96px; height: 96px; flex: none">
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2px solid #FFD84A; animation: h-ring 1.6s ease-out 0.2s both"></div>
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; border: 2px solid #36E2D0; animation: h-ring 1.6s ease-out 0.55s both"></div>
+          <sc-for list="{{dots}}" as="d" hint-placeholder-count="10">
+            <div style="position: absolute; left: 50%; top: 50%; width: 0; height: 0; {{d.wrap}}">
+              <div style="width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; {{d.dot}}"></div>
+            </div>
+          </sc-for>
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 50%; background: #FFD84A; color: #0D0A1E; display: flex; flex-direction: column; align-items: center; justify-content: center; animation: h-badge 0.7s cubic-bezier(0.2,1.4,0.4,1) 0.15s both">
+            <span style="font-family: 'Unbounded', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 0.12em">GROUP</span>
+            <span style="font-family: 'Unbounded', sans-serif; font-size: 40px; font-weight: 700; line-height: 1">4</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-family: 'Unbounded', sans-serif; font-size: 16px; font-weight: 700">2 of 3 rows win</span>
+          <span style="font-size: 12px; color: #F4F1FF">$10 fixed + 1 Group 4 share</span>
+          <span style="font-size: 11px; color: #9A93C9">Group 4 share: [amount from official page]</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <sc-for list="{{rows}}" as="row" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; width: 350px; padding: 10px 14px; border-radius: 18px; background: #17123A; border: 1.5px solid {{row.border}}; transition: border-color 0.4s">
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; letter-spacing: 0.08em; color: #9A93C9">
+            <span>{{row.label}}</span>
+            <span style="font-weight: 500; {{row.tagStyle}}">{{row.tag}}</span>
+          </div>
+          <div style="display: flex; gap: 10px">
+            <sc-for list="{{row.balls}}" as="b" hint-placeholder-count="6">
+              <div style="width: 40px; height: 40px; border-radius: 50%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; transition: background 0.4s, color 0.4s, border-color 0.4s; {{b.style}}">{{b.t}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isReveal}}" hint-placeholder-val="{{ false }}">
+      <button class="h-btn" onClick="{{reset}}" style="width: 350px; height: 50px; border-radius: 25px; border: 1.5px solid #36E2D0; background: transparent; color: #36E2D0; font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer">Check another ticket</button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{showSheet}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; box-sizing: border-box; padding: 22px 20px 26px; border-radius: 28px 28px 0 0; background: #1D1747; border-top: 1.5px solid #3B3270; display: flex; flex-direction: column; gap: 12px; animation: h-sheet 0.6s cubic-bezier(0.2,1.2,0.4,1) both">
+      <div style="align-self: center; width: 44px; height: 5px; border-radius: 3px; background: #3B3270"></div>
+      <span style="font-family: 'Unbounded', sans-serif; font-size: 17px; font-weight: 700">Welcome back. Got the numbers?</span>
+      <span style="font-size: 12px; color: #9A93C9">Share the screenshot here, or drop it in. We only read what you upload; we never fetch the official site.</span>
+      <button class="h-btn" onClick="{{gotShot}}" style="height: 58px; border: none; border-radius: 29px; background: #36E2D0; color: #0D0A1E; font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; animation: h-pulse 1.6s ease-out infinite">Use my screenshot</button>
+      <button class="h-btn" onClick="{{typeIn}}" style="height: 48px; border-radius: 24px; border: 1.5px solid #3B3270; background: transparent; color: #F4F1FF; font-size: 13px; cursor: pointer">Type the numbers instead</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = { phase: 'sealed', sheet: false };
+
+  clear() {
+    clearTimeout(this._t1);
+    clearTimeout(this._t2);
+  }
+
+  goOfficial = () => {
+    this.clear();
+    this.setState({ phase: 'away', sheet: false });
+    this._t1 = setTimeout(() => this.setState({ sheet: true }), 1600);
+  };
+
+  gotShot = () => {
+    this.clear();
+    this.setState({ phase: 'reading', sheet: false });
+    this._t1 = setTimeout(() => this.setState({ phase: 'confirm' }), 2200);
+  };
+
+  typeIn = () => {
+    this.clear();
+    this.setState({ phase: 'confirm', sheet: false });
+  };
+
+  reveal = () => {
+    this.clear();
+    this.setState({ phase: 'reveal' });
+  };
+
+  reset = () => {
+    this.clear();
+    this.setState({ phase: 'sealed', sheet: false });
+  };
+
+  componentWillUnmount() {
+    this.clear();
+  }
+
+  renderVals() {
+    const phase = this.state.phase;
+    const win = [4, 17, 22, 31, 40, 46];
+    const add = 9;
+    const tickets = [
+      [4, 11, 22, 31, 33, 49],
+      [4, 9, 17, 22, 31, 41],
+      [2, 13, 25, 36, 42, 47]
+    ];
+    const pad = (n) => (n < 10 ? '0' : '') + n;
+    const groupOf = (h, b) =>
+      h === 6 ? 1 : h === 5 && b ? 2 : h === 5 ? 3 : h === 4 && b ? 4 : h === 4 ? 5 : h === 3 && b ? 6 : h === 3 ? 7 : 0;
+    const fixed = { 5: '$50', 6: '$25', 7: '$10' };
+    const revealed = phase === 'reveal';
+
+    const rows = tickets.map((nums, ri) => {
+      const hits = nums.filter((n) => win.includes(n)).length;
+      const bonus = nums.includes(add);
+      const g = groupOf(hits, bonus);
+      const balls = nums.map((n, bi) => {
+        const d = ri * 140 + bi * 70;
+        let style = 'background:transparent;border:1.5px solid #3B3270;color:#8A83BF;';
+        if (!revealed) {
+          style = 'background:#17123A;border:1.5px solid #2E2760;color:#6E679E;';
+        } else if (win.includes(n)) {
+          style = 'background:#36E2D0;border:1.5px solid #36E2D0;color:#0D0A1E;animation:h-hit .6s cubic-bezier(.2,1.4,.4,1) both,h-glow 1.8s ease-in-out infinite;animation-delay:' + d + 'ms,' + (d + 600) + 'ms;';
+        } else if (n === add) {
+          style = 'background:#FFD84A;border:1.5px solid #FFD84A;color:#0D0A1E;animation:h-hit .6s cubic-bezier(.2,1.4,.4,1) both,h-glowy 1.8s ease-in-out infinite;animation-delay:' + d + 'ms,' + (d + 600) + 'ms;';
+        }
+        return { t: pad(n), style };
+      });
+      let tag = 'SEALED';
+      let tagStyle = 'color:#6E679E;';
+      let border = '#2E2760';
+      if (revealed) {
+        tag = g ? 'GROUP ' + g + (fixed[g] ? ' · ' + fixed[g] : ' · POOL SHARE') : 'NO PRIZE';
+        tagStyle = g ? 'color:#FFD84A;' : 'color:#8A83BF;';
+        border = g ? 'rgba(54,226,208,.6)' : '#2E2760';
+      } else if (phase === 'confirm') {
+        tag = 'READY';
+        tagStyle = 'color:#36E2D0;animation:h-blink 1s ease-in-out infinite;';
+      }
+      return { label: 'ROW ' + 'ABC'[ri], balls, tag, tagStyle, border };
+    });
+
+    const rolling = phase === 'reading';
+    const mkDrum = (final, i) => {
+      const strip = [];
+      for (let k = 0; k < 8; k++) strip.push(pad(((final * 7 + k * 13 + i * 5) % 49) + 1));
+      strip.push(pad(final));
+      const delay = 300 + i * 220;
+      return {
+        strip,
+        roll: rolling
+          ? 'animation:h-roll 1.3s cubic-bezier(.15,.7,.25,1) both;animation-delay:' + delay + 'ms;'
+          : 'transform:translateY(-320px);',
+        lock: rolling ? 'animation:h-lock .6s ease-out both;animation-delay:' + (delay + 1300) + 'ms;' : ''
+      };
+    };
+
+    const order = ['sealed', 'away', 'reading', 'confirm', 'reveal'];
+    const stepIdx = { sealed: 0, away: 1, reading: 2, confirm: 2, reveal: 3 }[phase];
+    const steps = [0, 1, 2, 3].map((i) => ({
+      style: i <= stepIdx ? 'background:#36E2D0;' : 'background:#231D55;'
+    }));
+
+    const shotColors = ['#9B8FE6', '#9B8FE6', '#9B8FE6', '#9B8FE6', '#9B8FE6', '#9B8FE6', '#E8C24A'];
+
+    const colors = ['#FFD84A', '#36E2D0', '#FF4FA3'];
+    const dots = [];
+    for (let i = 0; i < 10; i++) {
+      dots.push({
+        wrap: 'transform:rotate(' + i * 36 + 'deg);',
+        dot: 'background:' + colors[i % 3] + ';animation:h-burst .9s ease-out .35s both;'
+      });
+    }
+
+    const labels = { sealed: 'STEP 1 · SEALED', away: 'STEP 2 · OFFICIAL PAGE', reading: 'STEP 3 · READING', confirm: 'STEP 3 · CONFIRM', reveal: 'STEP 4 · REVEAL' };
+    const heads = {
+      sealed: 'Your ticket is in. Unlock the draw.',
+      away: 'Grab the winning numbers.',
+      reading: 'Spinning in the draw…',
+      confirm: 'Do these match the official page?',
+      reveal: "You've got a win!"
+    };
+
+    return {
+      stepLabel: labels[phase],
+      headline: heads[phase],
+      steps,
+      isSealed: phase === 'sealed',
+      isAway: phase === 'away',
+      isReading: rolling,
+      isConfirm: phase === 'confirm',
+      isReveal: revealed,
+      showCaptured: rolling || phase === 'confirm' || revealed,
+      showSheet: phase === 'away' && this.state.sheet,
+      shotBalls: shotColors.map((c) => 'background:' + c + ';'),
+      drums: win.map((n, i) => mkDrum(n, i)),
+      addDrum: mkDrum(add, 6),
+      rows,
+      dots,
+      goOfficial: this.goOfficial,
+      gotShot: this.gotShot,
+      typeIn: this.typeIn,
+      reveal: this.reveal,
+      reset: this.reset
+    };
+  }
+}
+</script>
+</body>
+</html>

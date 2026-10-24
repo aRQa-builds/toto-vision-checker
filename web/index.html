@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D0A1E">
+<title>TOTO &amp; 4D Check</title>
+<meta name="description" content="Check a Singapore TOTO or 4D ticket against the official result. Independent of Singapore Pools.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TOTO Check">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Arcade Drum (canvas A / A2 / A3): night purple, teal = your number hit,
+   yellow = Additional Number. Flow and reveal pacing merged from the Ticket
+   Scan Prototype (21 Oct 2026). Dark single theme by design. */
+:root{
+  --bg:#0D0A1E; --card:#17123A; --card2:#1D1747; --line:#2E2760; --line2:#3B3270;
+  --ink:#F4F1FF; --muted:#9A93C9; --dim:#6E679E; --teal:#36E2D0; --gold:#FFD84A; --pink:#FF4FA3;
+  --head:'Unbounded',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);-webkit-text-size-adjust:100%}
+body{min-height:100vh;overflow-x:hidden}
+button,input,textarea{font:inherit;color:inherit}
+a{color:var(--teal)}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.wrap{position:relative;max-width:440px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:14px}
+.blob{position:fixed;border-radius:50%;z-index:0;pointer-events:none;animation:float 6s ease-in-out infinite}
+.wrap>*{position:relative;z-index:1}
+.top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:700;font-size:14px;letter-spacing:.08em}
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--gold);display:block}
+.step{font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.steps{display:flex;gap:6px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--line);transition:background .4s}
+.steps span.on{background:var(--teal)}
+h1{margin:0;font-family:var(--head);font-weight:700;font-size:23px;line-height:1.15}
+.card{border-radius:16px;background:var(--card);border:1.5px solid var(--line);padding:12px 14px}
+.label{font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.small{font-size:12px;color:var(--muted);line-height:1.5}
+textarea{width:100%;min-height:210px;resize:vertical;background:var(--card);border:1.5px solid var(--line2);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.5;outline:none}
+textarea:focus,input:focus{border-color:var(--teal)}
+input{width:100%;background:var(--card);border:1.5px solid var(--line2);border-radius:12px;padding:11px 12px;font-size:16px;outline:none}
+.btn{appearance:none;border:0;border-radius:999px;padding:15px 18px;font-family:var(--head);font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;transition:transform .15s ease;width:100%;min-height:48px}
+.btn:active{transform:scale(.96)}
+.btn.go{background:var(--teal);color:var(--bg);animation:pulse 1.8s ease-out infinite}
+.btn.gold{background:var(--gold);color:var(--bg);animation:pulsey 1.8s ease-out infinite}
+.btn.ghost{background:rgba(13,10,30,.92);color:var(--ink);border:1.5px solid var(--line2)}
+.btn:disabled{opacity:.45;cursor:not-allowed;animation:none}
+.pair{display:flex;gap:10px}.pair>*{flex:1;min-width:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line2);background:transparent;border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer;min-height:32px}
+.err{border-color:var(--pink);color:#FFC6E2}
+.err li{margin:4px 0}
+.warn{border-color:var(--gold);color:#FFEFB0}
+.okbox{border-color:rgba(54,226,208,.55)}
+ul{margin:0;padding-left:18px}
+.field{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.field b{font-weight:500;text-align:right}
+
+/* boards */
+.board{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:18px;border:1.5px solid var(--line);background:var(--card);transition:border-color .4s}
+.board .tag{font-size:11px;letter-spacing:.08em;color:var(--dim)}
+.balls{display:flex;gap:6px;flex-wrap:wrap}
+.ball{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:500;background:var(--card2);border:1.5px solid var(--line);color:var(--dim);flex:none}
+.four{border-radius:12px;width:auto;padding:0 14px;letter-spacing:.2em;font-size:18px}
+input.ball{padding:0;text-align:center;color:var(--ink);border-color:var(--line2);font-size:15px}
+input.ball.four{width:96px}
+input.ball.bad{border-color:var(--pink);color:var(--pink)}
+.revealed .ball{background:transparent;border-color:var(--line2);color:#8A83BF}
+.revealed .ball.hit{background:var(--teal);border-color:var(--teal);color:var(--bg);animation:lit .55s cubic-bezier(.2,1.4,.4,1) both,glow 1.8s ease-in-out infinite}
+.revealed .ball.add{background:var(--gold);border-color:var(--gold);color:var(--bg);animation:lity .55s cubic-bezier(.2,1.4,.4,1) both,glowy 1.8s ease-in-out infinite}
+.board.win{border-color:var(--teal)}
+.board.pend{border-color:var(--gold)}
+.board.revealed.win{animation:bwin .4s ease both}
+.board.revealed.pend{animation:bpend .4s ease both}
+.pill{font-size:11px;letter-spacing:.08em;padding:4px 10px;border-radius:999px;border:1.5px solid var(--line2);color:var(--dim);white-space:nowrap;animation:in .4s ease both}
+.pill.win{background:var(--teal);border-color:var(--teal);color:var(--bg);font-weight:500}
+.pill.pend{border-color:var(--gold);color:var(--gold)}
+
+/* sealed */
+.sealed{position:relative;min-height:150px;border-radius:28px;background:var(--card);border:1.5px dashed var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px 20px;overflow:hidden}
+.sealed.ready{border-style:solid;border-color:var(--line2)}
+/* one-tap unlock in the Android app: the sealed box "opens" while the app reads the official page */
+.sealed.working{border-style:solid;border-color:var(--teal);animation:glow 1.4s ease-in-out infinite}
+.sealed.working .lock{animation:shake .7s ease-in-out infinite}
+.prog{width:70%;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--gold);animation:progfill 3s cubic-bezier(.3,.7,.4,1) forwards}
+@keyframes progfill{to{width:94%}}
+/* waiting teaser: TOTO "?" balls tumbling in a wave, 4D digit reels spinning */
+.beam{position:absolute;left:14px;right:14px;height:3px;border-radius:2px;background:var(--teal);box-shadow:0 0 18px 4px rgba(54,226,208,.55);opacity:.55;animation:beam 2.4s ease-in-out infinite alternate;pointer-events:none}
+.drum{display:flex;gap:6px;align-items:center;justify-content:center}
+.qball{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--head);font-size:13px;color:var(--muted);background:var(--card2);border:1.5px solid var(--line2);animation:tumble 1.6s ease-in-out infinite,shimmer 1.6s ease-in-out infinite}
+.qball.add{border-color:var(--gold);color:var(--gold)}
+.qball.roll{display:block;overflow:hidden;position:relative}
+.qball.roll>div{animation:spinball linear infinite}
+.qball.roll span{display:block;height:31px;line-height:31px;text-align:center;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink)}
+.qball.roll.add span{color:var(--gold)}
+.drum .plus{color:var(--dim);font-size:13px}
+.reels{display:flex;flex-direction:column;gap:8px;align-items:center}
+.reelrow{display:flex;gap:6px;align-items:center}
+.reelrow b{font-family:var(--head);font-size:11px;color:#C9C3F2;width:36px;text-align:right}
+.reel{width:32px;height:40px;border-radius:9px;overflow:hidden;background:#E9E5FF;color:var(--bg);position:relative}
+.reel.dim{background:var(--card2);color:var(--muted);border:1.5px solid var(--line2)}
+.reel span{display:block;height:40px;line-height:40px;text-align:center;font-size:20px;font-weight:500}
+.reel>div{animation:spin linear infinite}
+.sealed.ready .lock{animation:shake 2.8s ease-in-out infinite,glowy 1.8s ease-in-out infinite}
+.lock{width:46px;height:46px;border-radius:14px;background:var(--card2);border:1.5px solid var(--line2);display:grid;place-items:center;animation:shake 2.8s ease-in-out infinite}
+.lock svg{width:22px;height:22px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* draw panels */
+.draw-strip{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dball{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#E9E5FF;color:var(--bg);font-weight:500;animation:drop .5s cubic-bezier(.2,1.3,.4,1) both}
+.dball.add{background:var(--gold)}
+.top3{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center}
+.top3 b{font-family:var(--head);font-size:12px;color:#C9C3F2}
+.top3 .num{font-size:22px;letter-spacing:.2em;animation:drop .5s cubic-bezier(.2,1.3,.4,1) both}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.grid span{text-align:center;padding:6px 0;border-radius:8px;background:var(--card2);font-size:13px}
+.grid span.mine{background:var(--teal);color:var(--bg)}
+.src{font-size:11px;color:var(--muted);margin-top:10px}
+.src.user{color:var(--gold)}
+
+/* result */
+.result{position:relative;text-align:center;padding:22px 14px;border-radius:28px;background:var(--card);border:1.5px solid var(--line2);overflow:hidden}
+.result h2{margin:6px 0;font-family:var(--head);font-size:26px;line-height:1.15}
+.result.won{border-color:var(--teal)}
+.result.pending{border-color:var(--gold)}
+.badge{display:inline-block;padding:5px 12px;border-radius:999px;font-family:var(--head);font-size:11px;letter-spacing:.1em;animation:badge .7s cubic-bezier(.2,1.4,.4,1) both;animation-delay:inherit}
+.won .badge{background:var(--teal);color:var(--bg)}
+.pending .badge{background:var(--gold);color:var(--bg)}
+.no_win .badge{background:var(--line2);color:var(--ink)}
+.ring{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px;border-radius:50%;border:2px solid var(--teal);animation:ring 1.4s ease-out both;pointer-events:none}
+.spark{position:absolute;bottom:20px;width:8px;height:8px;border-radius:50%;animation:burst 1.2s ease-out both;pointer-events:none}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.tiles div{background:var(--card2);border:1.5px solid var(--line);border-radius:14px;padding:10px 4px}
+.tiles small{display:block;font-size:10px;letter-spacing:.1em;color:var(--muted)}
+.tiles strong{display:block;font-family:var(--head);font-size:16px;margin-top:4px;font-variant-numeric:tabular-nums}
+.tiles .w strong{color:var(--teal)}
+.tiles .w.pend strong{color:var(--gold)}
+.late{animation:in .5s ease both}
+
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:center;pointer-events:none}
+.sheet>div{pointer-events:auto;width:100%;max-width:440px;background:#1A1442;border:1.5px solid var(--line2);border-bottom:0;border-radius:26px 26px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:sheet .6s cubic-bezier(.2,1,.3,1) both;box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+.fade{animation:in .45s ease both}
+details summary{cursor:pointer;color:var(--muted);font-size:13px}
+.amounts{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center;margin-top:10px}
+footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-top:10px}
+.hidden{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(54,226,208,.55)}100%{box-shadow:0 0 0 20px rgba(54,226,208,0)}}
+@keyframes pulsey{0%{box-shadow:0 0 0 0 rgba(255,216,74,.55)}100%{box-shadow:0 0 0 20px rgba(255,216,74,0)}}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+@keyframes sheet{0%{transform:translateY(120%)}70%{transform:translateY(-4%)}100%{transform:translateY(0)}}
+@keyframes lit{0%{background:transparent;border-color:#3B3270;color:#8A83BF;transform:scale(1)}45%{transform:scale(1.35)}100%{background:#36E2D0;border-color:#36E2D0;color:#0D0A1E;transform:scale(1)}}
+@keyframes lity{0%{background:transparent;border-color:#3B3270;color:#8A83BF;transform:scale(1)}45%{transform:scale(1.35)}100%{background:#FFD84A;border-color:#FFD84A;color:#0D0A1E;transform:scale(1)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(54,226,208,0)}50%{box-shadow:0 0 16px 3px rgba(54,226,208,.65)}}
+@keyframes glowy{0%,100%{box-shadow:0 0 0 0 rgba(255,216,74,0)}50%{box-shadow:0 0 16px 3px rgba(255,216,74,.7)}}
+@keyframes drop{0%{transform:translateY(-46px);opacity:0}60%{transform:translateY(6px);opacity:1}100%{transform:translateY(0);opacity:1}}
+@keyframes ring{0%{transform:scale(.5);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+@keyframes badge{0%{transform:scale(0) rotate(-24deg)}70%{transform:scale(1.14) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes burst{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(.3);opacity:0}}
+@keyframes beam{0%{top:6%}100%{top:90%}}
+@keyframes tumble{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-12px) rotate(-18deg)}60%{transform:translateY(2px) rotate(12deg)}}
+@keyframes shimmer{0%,100%{background:#1D1747}50%{background:#2B2358}}
+@keyframes spin{0%{transform:translateY(0)}100%{transform:translateY(-400px)}}
+@keyframes spinball{0%{transform:translateY(0)}100%{transform:translateY(-310px)}}
+@keyframes bwin{0%{border-color:#2E2760}100%{border-color:#36E2D0}}
+@keyframes bpend{0%{border-color:#2E2760}100%{border-color:#FFD84A}}
+@keyframes in{0%{transform:translateY(14px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  /* a frozen reel would show made-up digits that could pass for a result */
+  .reel>div,.qball.roll>div{display:none}
+  .reel::after,.qball.roll::after{content:"?";display:grid;place-items:center;height:100%;font-family:var(--head);font-size:14px}
+  .beam{display:none}
+}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-delay:0ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}
+.help .hb{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.help>summary{cursor:pointer;list-style:none}
+.help>summary::-webkit-details-marker{display:none}
+.help>summary::after{content:" ▾";color:var(--muted)}
+.help[open]>summary::after{content:" ▴"}
+.help .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.help .bar{display:flex}
+.help .bar i{display:block;height:100%;background:var(--teal)}
+.help .bar i.wait{background:var(--gold)}
+.help .draws{max-height:180px;overflow-y:auto}
+.help .draws .chip{text-decoration:none;color:var(--ink)}
+.help .draws .chip.one{border-color:var(--gold);color:var(--gold)}
+/* Welcome splash (23 Oct 2026): ~3 s of numbered balls bouncing under the title, then they
+   pop like bubbles. Hidden unless the script starts it; skipped for reduced motion and for
+   a Share-target load; tap, click or Esc skips it. */
+#splash{display:none;position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 30%,#221B52 0%,var(--bg) 62%);opacity:1;transition:opacity .35s ease;touch-action:manipulation;cursor:pointer}
+#splash.go{display:block}
+#splash.gone{opacity:0;pointer-events:none}
+#splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#splash .st{position:absolute;left:0;right:0;top:34%;text-align:center;padding:0 20px;pointer-events:none;
+  opacity:0;transform:scale(.86) translateY(12px);transition:opacity .9s ease .5s,transform .9s cubic-bezier(.2,1.3,.4,1) .5s}
+#splash.in .st{opacity:1;transform:none}
+#splash.out .st{opacity:0;transform:scale(1.12);filter:blur(3px);transition:opacity .3s ease,transform .3s ease,filter .3s ease}
+#splash .stt{font-family:var(--head);font-weight:700;font-size:clamp(26px,8vw,44px);letter-spacing:.06em;line-height:1.1;color:#F6F2FF;
+  text-shadow:0 2px 0 #CFC6F5,0 4px 0 #9F93E0,0 6px 0 #7466C2,0 12px 22px rgba(6,3,24,.55)}
+#splash .stt i{display:inline-block;width:.42em;height:.42em;border-radius:50%;background:var(--gold);margin-right:.35em;vertical-align:.04em;box-shadow:0 0 18px rgba(255,216,74,.6)}
+#splash .sts{margin-top:12px;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="splash" aria-hidden="true"><canvas></canvas>
+  <div class="st"><div class="stt"><i></i>TOTO · 4D CHECK</div><div class="sts">Check any TOTO or 4D ticket</div></div></div>
+<script>
+// Welcome splash (claymorphic balls). Self-contained: any failure just removes it and the page carries on beneath.
+(function(){
+  var el = document.getElementById("splash");
+  try {
+    var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!el || calm || /[?&]shared=/.test(location.search)) { if (el) el.remove(); return; }
+    var cv = el.querySelector("canvas"), g = cv.getContext("2d");
+    if (!g) { el.remove(); return; }
+    el.classList.add("go");
+    var W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1), R = 24;
+    function size(){ W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); R = Math.max(20, Math.min(36, Math.min(W, H) * 0.066)); }
+    size(); addEventListener("resize", size);
+
+    // ---- clay look: matte puffy body, soft inner shade bottom-right, blurred highlight top-left,
+    // a little bounced light along the bottom edge, a soft cast shadow, a debossed number.
+    var PAL = [["#4FDCCB", "#1F6F73"], ["#FFD35C", "#8A5E12"], ["#FF86BC", "#8E2A5C"], ["#A99DEB", "#3F3585"], ["#F2EDFF", "#5A4C99"]];
+    function mix(a, b, k){ var p = function(h){ return [1, 3, 5].map(function(i){ return parseInt(h.substr(i, 2), 16); }); };
+      var x = p(a), y = p(b); return "rgb(" + x.map(function(v, i){ return Math.round(v + (y[i] - v) * k); }).join(",") + ")"; }
+    function sprite(r, col){                       // body (without number) and light overlay, drawn once per ball
+      var pad = Math.ceil(r * .9), s = Math.ceil(r * 2 + pad * 2), mk = function(){
+        var c = document.createElement("canvas"); c.width = Math.ceil(s * dpr); c.height = Math.ceil(s * dpr);
+        var x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); return [c, x]; };
+      var B = mk(), bc = B[1], cx = s / 2, cy = s / 2;
+      bc.save(); bc.shadowColor = "rgba(8,4,28,.55)"; bc.shadowBlur = r * .55; bc.shadowOffsetX = r * .16; bc.shadowOffsetY = r * .24;
+      bc.beginPath(); bc.arc(cx, cy, r, 0, 6.2832); bc.fillStyle = col[0]; bc.fill(); bc.restore();
+      var gr = bc.createRadialGradient(cx - r * .3, cy - r * .35, r * .1, cx, cy, r);
+      gr.addColorStop(0, mix(col[0], "#FFFFFF", .38)); gr.addColorStop(.55, col[0]); gr.addColorStop(1, mix(col[0], "#2A1B55", .32));
+      bc.beginPath(); bc.arc(cx, cy, r, 0, 6.2832); bc.fillStyle = gr; bc.fill();
+      var O = mk(), oc = O[1];                    // on top of the number: inner shade, rim light, highlight
+      oc.save(); oc.beginPath(); oc.arc(cx, cy, r, 0, 6.2832); oc.clip();
+      var sh = oc.createRadialGradient(cx - r * .34, cy - r * .4, r * .45, cx - r * .1, cy - r * .1, r * 1.25);
+      sh.addColorStop(0, "rgba(30,10,70,0)"); sh.addColorStop(.62, "rgba(30,10,70,0)"); sh.addColorStop(1, "rgba(30,10,70,.42)");
+      oc.fillStyle = sh; oc.fillRect(cx - r, cy - r, r * 2, r * 2);
+      var rim = oc.createRadialGradient(cx + r * .1, cy + r * 1.02, 0, cx + r * .1, cy + r * 1.02, r * .85);
+      rim.addColorStop(0, "rgba(255,255,255,.30)"); rim.addColorStop(1, "rgba(255,255,255,0)");
+      oc.fillStyle = rim; oc.fillRect(cx - r, cy - r, r * 2, r * 2);
+      oc.restore();
+      oc.save(); oc.translate(cx - r * .36, cy - r * .42); oc.rotate(-.62); oc.scale(1, .58);
+      var hl = oc.createRadialGradient(0, 0, 0, 0, 0, r * .52);
+      hl.addColorStop(0, "rgba(255,255,255,.62)"); hl.addColorStop(.6, "rgba(255,255,255,.18)"); hl.addColorStop(1, "rgba(255,255,255,0)");
+      oc.fillStyle = hl; oc.beginPath(); oc.arc(0, 0, r * .52, 0, 6.2832); oc.fill(); oc.restore();
+      return {body: B[0], over: O[0], s: s};
+    }
+
+    var N = W < 520 ? 22 : 32, balls = [], t0 = performance.now(), last = t0, used = {}, kicked = 0;
+    for (var i = 0; i < N; i++){
+      var n; do { n = 1 + Math.floor(Math.random() * 49); } while (used[n]); used[n] = 1;
+      var c = PAL[i % PAL.length], r = R * (0.85 + Math.random() * 0.3);
+      balls.push({n: n, fill: c[0], ink: c[1], r: r, sp: sprite(r, c),
+        x: r + Math.random() * Math.max(1, W - 2 * r), y: -r - i * 78 - Math.random() * 50,
+        vx: (Math.random() - .5) * 240, vy: 40 + Math.random() * 120, a: Math.random() * 6.28, w: 0, pop: -1});
+    }
+    var G = 1450, REST = 0.74, POP_AT = 3900, POP_LEN = 650, END_AT = 4600, popped = false, done = false;
+    function startPop(now){
+      if (popped) return; popped = true; el.classList.add("out");
+      var base = now - t0; balls.forEach(function(b){ b.pop = base + Math.random() * 280; }); POP_AT = base;
+    }
+    function step(dt){
+      balls.forEach(function(b){
+        if (b.pop >= 0) return;
+        b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+        if (b.x < b.r){ b.x = b.r; b.vx = Math.abs(b.vx) * REST; }
+        if (b.x > W - b.r){ b.x = W - b.r; b.vx = -Math.abs(b.vx) * REST; }
+        if (b.y > H - b.r){ b.y = H - b.r; b.vy = -Math.abs(b.vy) * REST;
+          if (Math.abs(b.vy) < 90) b.vy = -(260 + Math.random() * 260);
+          b.vx *= 0.985; if (Math.abs(b.vx) < 40) b.vx += (Math.random() - .5) * 220; }
+        b.w = b.vx / b.r; b.a += b.w * dt;
+      });
+      for (var i = 0; i < balls.length; i++) for (var j = i + 1; j < balls.length; j++){
+        var p = balls[i], q = balls[j]; if (p.pop >= 0 || q.pop >= 0) continue;
+        var dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy), m = p.r + q.r;
+        if (d > 0 && d < m){
+          var nx = dx / d, ny = dy / d, ov = (m - d) / 2;
+          p.x -= nx * ov; p.y -= ny * ov; q.x += nx * ov; q.y += ny * ov;
+          var rv = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+          if (rv < 0){ var k = -(1 + 0.8) * rv / 2; p.vx -= k * nx; p.vy -= k * ny; q.vx += k * nx; q.vy += k * ny; }
+        }
+      }
+    }
+    function floorShadow(b){                      // soft contact shadow on the floor: smaller and fainter as the ball rises
+      var h = Math.max(0, Math.min(1, (H - b.y - b.r) / (H * .55))), a = .42 * (1 - h) + .04, w = b.r * (1.25 - .5 * h);
+      g.save(); g.translate(b.x + b.r * .12, H - 3); g.scale(1, .22);
+      var sg = g.createRadialGradient(0, 0, 0, 0, 0, w);
+      sg.addColorStop(0, "rgba(0,0,0," + a + ")"); sg.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = sg; g.beginPath(); g.arc(0, 0, w, 0, 6.2832); g.fill(); g.restore();
+    }
+    function ball(b){
+      var sp = b.sp, half = sp.s / 2, r = b.r;
+      g.drawImage(sp.body, b.x - half, b.y - half, sp.s, sp.s);
+      g.save(); g.translate(b.x, b.y); g.rotate(b.a);                 // the number rolls; the light stays put
+      g.font = "700 " + Math.round(r * .8) + "px Unbounded, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      var t = String(b.n), oy = r * .04;
+      g.fillStyle = "rgba(255,255,255,.55)"; g.fillText(t, r * .035, oy + r * .06);      // lit lower edge of the dent
+      g.fillStyle = b.ink; g.globalAlpha = .9; g.fillText(t, 0, oy);                      // the dent itself
+      g.restore();
+      g.drawImage(sp.over, b.x - half, b.y - half, sp.s, sp.s);
+    }
+    function bubblePop(b, p){
+      if (p < .22){
+        var k = 1 + p / .22 * .28; g.save(); g.globalAlpha = 1 - p / .22 * .4; g.translate(b.x, b.y); g.scale(k, k); g.translate(-b.x, -b.y); ball(b); g.restore();
+      }
+      var e = Math.min(1, p / .85);
+      g.save(); g.globalAlpha = Math.max(0, 1 - e); g.lineWidth = 2.6; g.strokeStyle = b.fill;
+      g.beginPath(); g.arc(b.x, b.y, b.r * (1.2 + e * 1.1), 0, 6.2832); g.stroke(); g.restore();
+      g.save(); g.fillStyle = b.fill; g.globalAlpha = Math.max(0, 1 - e);
+      for (var i = 0; i < 8; i++){ var an = i / 8 * 6.2832 + b.n, d = b.r * (.9 + e * 1.8);
+        g.beginPath(); g.arc(b.x + Math.cos(an) * d, b.y + Math.sin(an) * d, Math.max(.4, 3.6 * (1 - e)), 0, 6.2832); g.fill(); }
+      g.restore();
+    }
+    function finish(){ if (done) return; done = true; removeEventListener("resize", size);
+      el.classList.add("gone"); setTimeout(function(){ el.remove(); }, 450); }
+    function frame(now){
+      if (done) return;
+      var dt = Math.min(.033, (now - last) / 1000); last = now; var t = now - t0;
+      if (t > 500) el.classList.add("in");
+      if (!popped && t >= POP_AT) startPop(now);
+      g.clearRect(0, 0, W, H);
+      if (!popped && t > 1700 && now - kicked > 420){       // keep the pile bouncing: toss a few balls up
+        kicked = now;
+        for (var k = 0; k < 3; k++){ var b = balls[Math.floor(Math.random() * balls.length)];
+          b.vy = -(620 + Math.random() * 560); b.vx += (Math.random() - .5) * 340; }
+      }
+      if (!popped) step(dt);
+      if (!popped) balls.forEach(floorShadow);
+      balls.forEach(function(b){
+        if (b.pop < 0){ ball(b); return; }
+        var p = (t - b.pop) / POP_LEN;
+        if (p < 0) ball(b); else if (p < 1) bubblePop(b, p);
+      });
+      if (popped && t > POP_AT + 280 + POP_LEN - 150) finish();
+      if (t > END_AT + 700) return finish();
+      requestAnimationFrame(frame);
+    }
+    function skip(){ if (!popped) { POP_AT = 0; startPop(performance.now()); } else finish(); }
+    el.addEventListener("pointerdown", skip);
+    addEventListener("keydown", function k(e){ if (e.key === "Escape" || e.key === "Enter" || e.key === " "){ skip(); removeEventListener("keydown", k); } });
+    requestAnimationFrame(frame);
+  } catch (e) { if (el) el.remove(); }
+})();
+</script>
+<div class="blob" style="top:90px;right:-40px;width:130px;height:130px;background:#1D1747"></div>
+<div class="blob" style="top:470px;left:-50px;width:110px;height:110px;background:#2A1646;animation-duration:6.5s;animation-delay:-2s"></div>
+<div class="blob" style="bottom:70px;right:24px;width:70px;height:70px;background:#123446;animation-duration:4.5s;animation-delay:-1s"></div>
+
+<main class="wrap" id="app"></main>
+<div class="sheet hidden" id="sheet"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- tiny DOM helper (text only, never innerHTML)
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})){
+    if (v === null || v === undefined || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)){
+    if (kid === null || kid === undefined || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+function svg(path){
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("aria-hidden", "true");
+  s.innerHTML = path;                       // constant markup only, never user text
+  return s;
+}
+const LOCK = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
+
+const S = {phase: "ticket", text: "", ticket: null, editing: false, edits: null, results: {}, check: null,
+           busy: false, problems: [], photo: false, fromPhoto: false, sample: false, notes: [], screenNote: "", screenNotes: {},
+           override: false, testing: null, queue: null, qi: 0, tally: [], auto: null, autoCapture: true,
+           wanted: {}, help: {busy: false, open: false, done: null, problems: []}};
+const STEPS = ["Ticket", "Confirm", "Unlock", "Reveal"];
+const EXAMPLES = {
+  toto: "TOTO\nORDINARY\nA. 02 15 19 20 27 05\nB. 02 15 19 40 41 05\nDRAW:\nMON 19/10/26  4227/26\nPRICE: $2.00",
+  fourd: "4D\nA 8455 BIG $1\nB 9363 BIG $1 SML $1\nDRAW: WED 21/10/26 5551/26\nPRICE: $3.00",
+};
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+async function api(path, body){
+  let r;
+  try {
+    r = await fetch(path, {method: body ? "POST" : "GET",
+      headers: body ? {"Content-Type": "application/json"} : {}, body: body ? JSON.stringify(body) : undefined});
+  } catch (e) {
+    const msg = navigator.onLine === false
+      ? "You're offline. Checking needs a connection; try again when you're back online."
+      : "Can't reach the checker right now. Try again in a minute.";
+    const err = new Error(msg); err.problems = [msg]; throw err;
+  }
+  let data = null;
+  try { data = await r.json(); } catch (e) {}
+  if (!r.ok){
+    const d = data && data.detail;
+    const problems = (d && d.problems) || [typeof d === "string" ? d : "Something went wrong. Try again."];
+    const err = new Error(problems.join(" ")); err.problems = problems; throw err;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------- photos
+// Shrunk in the browser first (long side 2000 px, JPEG) so uploads stay small.
+// The server sends them to Google Cloud Vision to read the text and keeps nothing.
+async function shrink(file, enhance){
+  let src;
+  try { src = await createImageBitmap(file, {imageOrientation: "from-image"}); }
+  catch (e) {
+    src = await new Promise((ok, no) => {
+      const img = new Image(); img.onload = () => ok(img); img.onerror = () => no(e);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  const w = src.width, ht = src.height, k = Math.min(1, 2000 / Math.max(w, ht));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * k); c.height = Math.round(ht * k);
+  const g = c.getContext("2d");
+  g.drawImage(src, 0, 0, c.width, c.height);
+  if (enhance) cleanTicket(g, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.9).split(",")[1];
+}
+
+// Ticket photos only: the paper is printed all over with a faint SINGAPORE POOLS
+// watermark, which can hide whole numbers from Vision (live test 22 Oct: "02" and
+// "05" never came back). Black print is dark in every colour channel; the watermark
+// is light and coloured. Steps, all measured from this photo:
+// 1. each pixel = mix of its darkest channel and its brightness (print stays dark,
+//    coloured watermark gets lighter);
+// 2. divide by the local paper brightness (the photo blurred at a large scale), so
+//    shade across the ticket or a warm lamp is flattened, like a scanner;
+// 3. levels: just under the paper becomes white (watermark gone), the darkest print black.
+function cleanTicket(g, w, h){
+  const im = g.getImageData(0, 0, w, h), d = im.data, n = w * h;
+  const v = new Float32Array(n);
+  const tone = g.createImageData(w, h), td = tone.data;
+  for (let i = 0, j = 0; i < n; i++, j += 4){
+    const r = d[j], gr = d[j + 1], b = d[j + 2];
+    v[i] = (Math.min(r, gr, b) + (0.299 * r + 0.587 * gr + 0.114 * b)) / 2;
+    td[j] = td[j + 1] = td[j + 2] = v[i]; td[j + 3] = 255;
+  }
+  // local paper level: shrink a lot (averages away the thin print), then blow back up smoothly
+  const full = document.createElement("canvas"); full.width = w; full.height = h;
+  full.getContext("2d").putImageData(tone, 0, 0);
+  const sw = Math.max(4, Math.round(w / 40)), sh = Math.max(4, Math.round(h / 40));
+  const small = document.createElement("canvas"); small.width = sw; small.height = sh;
+  const sg = small.getContext("2d"); sg.imageSmoothingQuality = "high"; sg.drawImage(full, 0, 0, sw, sh);
+  const bgc = document.createElement("canvas"); bgc.width = w; bgc.height = h;
+  const bgg = bgc.getContext("2d"); bgg.imageSmoothingQuality = "high"; bgg.drawImage(small, 0, 0, w, h);
+  const bg = bgg.getImageData(0, 0, w, h).data;
+  const hist = new Uint32Array(256), f = new Uint8ClampedArray(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4){
+    f[i] = Math.min(255, v[i] * 255 / Math.max(24, bg[j]));
+    hist[f[i]]++;
+  }
+  const pct = q => { let acc = 0; for (let t = 0; t < 256; t++){ acc += hist[t]; if (acc >= q * n) return t; } return 255; };
+  const paper = pct(0.6), ink = pct(0.01);
+  const hi = Math.max(ink + 40, paper - 30), lo = Math.min(hi - 30, ink + 25);
+  for (let i = 0, j = 0; i < n; i++, j += 4){
+    d[j] = d[j + 1] = d[j + 2] = Math.max(0, Math.min(255, (f[i] - lo) * 255 / (hi - lo)));
+  }
+  g.putImageData(im, 0, 0);
+}
+function pickImages(multiple, onFiles, camera){
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "image/*"; inp.multiple = multiple;
+  if (camera) inp.setAttribute("capture", "environment");   // phones open the back camera straight away
+  inp.onchange = () => { if (inp.files && inp.files.length) onFiles([...inp.files]); };
+  inp.click();
+}
+const PHOTO_NOTE = "Photos are read by Google Cloud Vision and not kept.";
+
+// Paste a screenshot straight from the clipboard: screenshot the official page,
+// switch back, tap Paste. No saving or picking a file.
+// Phones save screenshots to Photos, not the clipboard, so a Paste button there
+// only ever said "no picture" (owner 22 Oct 2026). Phones get the gallery picker
+// (the screenshot is the newest photo) and Share; computers get Paste and Upload.
+const PHONE = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+const CAN_PASTE = !PHONE && !!(navigator.clipboard && navigator.clipboard.read);
+const INSTALLED = window.matchMedia && matchMedia("(display-mode: standalone)").matches;
+async function clipboardImages(){
+  const items = await navigator.clipboard.read();     // the browser may ask once
+  const files = [];
+  for (const it of items){
+    const type = it.types.find(t => t.startsWith("image/"));
+    if (type) files.push(new File([await it.getType(type)], "pasted." + type.split("/")[1], {type}));
+  }
+  return files;
+}
+const NO_IMAGE_TO_PASTE = PHONE
+  ? "There's no picture to paste: phones save screenshots to your photos, not the clipboard. " +
+    "Tap Choose screenshot (it's your newest photo), or tap Copy on the screenshot preview before pasting."
+  : "There's no picture to paste. Take a screenshot of the official page (Win+Shift+S on Windows, " +
+    "Cmd+Ctrl+Shift+4 on a Mac copies it), then come back and tap Paste. Or use Upload.";
+async function pasteInto(onFiles){
+  let files = [];
+  try { files = await clipboardImages(); }
+  catch (e) {
+    S.problems = ["Your browser didn't let us read the clipboard. Long-press on this page and choose Paste, or use Upload."];
+    return render();
+  }
+  if (!files.length){ S.problems = [NO_IMAGE_TO_PASTE]; return render(); }
+  onFiles(files);
+}
+// Choose (gallery) and Paste, in the order that suits the device.
+function screenButtons(d, before, big){
+  const choose = h("button", {class: big ? (PHONE ? "btn gold" : "btn ghost") : "chip", disabled: S.busy,
+    onclick: () => pickImages(true, files => { if (before) before(); readScreens(d, files); })},
+    (PHONE ? "🖼 Choose screenshot" : "Upload screenshot") + (multiDraw() ? "s" : ""));
+  const paste = CAN_PASTE ? h("button", {class: big ? (PHONE ? "chip" : "btn gold") : "chip", disabled: S.busy,
+    style: big && PHONE ? "align-self:center" : "",
+    onclick: () => { if (before) before(); S.phase = "results"; pasteInto(files => readScreens(d, files)); }},
+    "📋 Paste screenshot") : null;
+  return PHONE ? [choose, paste] : [paste, choose];
+}
+// Draws the user gives results for: those with nothing on file, or every draw
+// once they chose "Use my own screenshot" over the stored result (S.override).
+function needDraws(){ return S.ticket ? S.ticket.draws.filter(d => S.override || !d.on_file) : []; }
+function multiDraw(){ return needDraws().length > 1; }
+function firstNeed(){ return needDraws()[0] || null; }
+// Ctrl+V / long-press Paste anywhere: a picture goes to the right place, text pastes as usual.
+document.addEventListener("paste", e => {
+  if (!S.photo || S.busy) return;
+  const files = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => f.type.startsWith("image/"));
+  if (!files.length) return;
+  e.preventDefault();
+  document.getElementById("sheet").classList.add("hidden");
+  if (S.phase === "ticket") return readPhoto(files);
+  const d = firstNeed();
+  if (d && (S.phase === "sealed" || S.phase === "results")) return readScreens(d, files);
+  const g = S.ticket && S.ticket.game;
+  if (g && S.help.open && !S.help.busy) contribute(g, files);      // the open "Help complete" card takes it
+});
+
+const money = v => "S$" + Number(v).toLocaleString("en-SG", {minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2});
+function gameName(){ return S.ticket && S.ticket.game === "4d" ? "4D" : "TOTO"; }
+function fmtDate(iso){
+  if (!iso) return "";
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-SG", {weekday: "short", day: "numeric", month: "short", year: "numeric"});
+}
+function stepIndex(){ return {ticket: 0, review: 1, sealed: 2, results: 2, reveal: 3}[S.phase] || 0; }
+function say(msg){ document.getElementById("live").textContent = msg; }
+
+// Testing phase (owner's rule): higher photo limits for a limited time; on the
+// last day the banner asks the owner to renew or close out for deployment.
+function testingBanner(){
+  const t = S.testing;
+  if (!t || !t.active) return null;
+  const when = new Date(t.ends).toLocaleString("en-SG", {weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"});
+  return h("div", {class: "card small " + (t.last_day ? "warn" : "okbox"), style: "padding:8px 12px"},
+    t.last_day ? `Testing phase ends ${when}. Owner: renew or close out for deployment.`
+               : `Testing phase · higher photo limits until ${when}.`);
+}
+
+// ---------------------------------------------------------------- shell
+function render(){
+  const app = document.getElementById("app");
+  app.replaceChildren(...[
+    h("div", {class: "top"},
+      h("div", {class: "brand"}, h("i"), (S.ticket ? gameName() : "TOTO · 4D") + " CHECK"),
+      h("span", {class: "step"}, `STEP ${stepIndex() + 1}/4 · ${STEPS[stepIndex()].toUpperCase()}`)),
+    h("div", {class: "steps", "aria-hidden": "true"}, STEPS.map((_, i) => h("span", {class: i <= stepIndex() ? "on" : ""}))),
+    testingBanner(),
+    queueBar(),
+    ({ticket: viewTicket, review: viewReview, sealed: viewSealed, results: viewResults, reveal: viewReveal}[S.phase])(),
+    h("footer", {}, "Not affiliated with Singapore Pools. Official results published by Singapore Pools are final. ",
+      "Please play responsibly. Ticket details are used for this check only and are not stored."),
+  ].flat(Infinity).filter(Boolean));
+  window.scrollTo({top: 0});
+}
+
+function problemsBox(list){
+  if (!list || !list.length) return null;
+  return h("div", {class: "card err fade", role: "alert"}, h("ul", {}, list.map(p => h("li", {}, p))));
+}
+
+// ---------------------------------------------------------------- 1. ticket
+function viewTicket(){
+  // One main button: with nothing in the box it scans (opens the camera); as soon as
+  // there is ticket text (typed, pasted or read from a photo) it reads that instead.
+  const scanMode = () => S.photo && !S.text.trim();
+  const label = () => S.busy ? "Reading…" : scanMode() ? "📷 Scan ticket" : "Read my ticket";
+  const main = h("button", {class: "btn go", disabled: S.busy,
+    onclick: () => scanMode() ? pickImages(false, readPhoto, true) : readTicket()}, label());
+  const ta = h("textarea", {id: "ticket", spellcheck: "false", autocapitalize: "characters",
+    "aria-label": "Ticket, as printed", placeholder: EXAMPLES.toto,
+    oninput: e => { S.text = e.target.value; main.textContent = label(); }});
+  ta.value = S.text;
+  return [
+    h("h1", {}, S.photo ? "Scan or type your ticket" : "Type in your ticket"),
+    shareStatus(),
+    h("p", {class: "small", style: "margin:0"},
+      S.photo ? "Scan it with your camera, or copy the lines as printed: the bets, the DRAW lines and PRICE. Short forms work too: "
+              : "Copy the lines as printed: the bets, the DRAW lines and PRICE. Short forms work too: ",
+      h("code", {}, "1 2 3 4 5 6 7"), " is a System 7, ", h("code", {}, "1234 B2 S1"), " is a 4D bet, ",
+      h("code", {}, "draw 4227"), " sets the draw."),
+    h("div", {class: "chips"},
+      h("button", {class: "chip", onclick: () => { S.text = EXAMPLES.toto; render(); }}, "TOTO example"),
+      h("button", {class: "chip", onclick: () => { S.text = EXAMPLES.fourd; render(); }}, "4D example"),
+      S.photo
+        ? h("button", {class: "chip", disabled: S.busy, onclick: () => pickImages(true, readPhoto)}, `🖼 Upload photos (up to ${MAX_TICKETS})`)
+        : h("button", {class: "chip", disabled: true, title: "Coming soon"}, "Photo (soon)"),
+      S.testing ? h("button", {class: "chip", disabled: S.busy, onclick: () => loadTyped("toto")}, "🧪 TOTO sample") : null,
+      S.testing ? h("button", {class: "chip", disabled: S.busy, onclick: () => loadTyped("4d")}, "🧪 4D sample") : null,
+      S.testing ? h("button", {class: "chip", disabled: S.busy, onclick: () => loadTyped("five")}, "🧪 5 samples") : null,
+      S.photo && S.testing
+        ? h("button", {class: "chip", disabled: S.busy, onclick: loadSamples}, "🖼 Photo specimens")
+        : null),
+    ta,
+    problemsBox(S.problems),
+    main,
+    S.photo ? h("p", {class: "small", style: "margin:0;text-align:center"}, PHOTO_NOTE) : null,
+  ];
+}
+
+// Screenshots shared into the app (Android Share) land on a fresh page with no
+// ticket, so this card shows what happened to them.
+function shareStatus(){
+  const hp = S.help;
+  if (S.ticket || !(hp.busy || hp.done || hp.problems.length)) return null;
+  return h("div", {class: "card fade small", style: "display:flex;flex-direction:column;gap:8px"},
+    hp.busy ? "Reading your shared screenshots…" : null,
+    hp.done ? h("div", {style: "color:var(--teal)"}, hp.done) : null,
+    problemsBox(hp.problems));
+}
+
+// Several tickets in one go (owner's rule, 22 Oct): up to MAX_TICKETS photos are
+// read one after another, then confirmed and revealed in turn, with a total at the
+// end. The server's per-person photo limits still apply to every photo, so a
+// changed page can't read more than that.
+const MAX_TICKETS = 5;
+function loadQueued(i){
+  const q = S.queue[i];
+  S.qi = i; S.text = q.text; S.notes = q.notes; S.fromPhoto = !q.sample; S.sample = !!q.sample;
+  S.ticket = q.ticket; S.results = {}; S.check = null; S.editing = false; S.edits = null; S.override = false;
+  S.screenNote = ""; S.screenNotes = {}; S.problems = q.problems || [];
+  S.phase = q.ticket && q.ticket.ready ? "review" : "ticket";
+  render();
+}
+
+// Testing phase only: sample tickets typed on draws the results database still lacks, so
+// checking one makes you add that draw's official screenshot and the database fills while
+// bugs are being hunted. "5 samples" runs through the same one-after-another queue as photos.
+async function loadTyped(kind){
+  S.busy = true; S.problems = []; render();
+  try {
+    const r = await (await fetch("/api/samples/tickets?kind=" + kind)).json();
+    if (!r.tickets) throw new Error("samples are not available");
+    const queue = r.tickets.map(t => ({text: t.text, ticket: t.ticket, problems: [], sample: true,
+      notes: [`Sample for testing: ${t.label}. Checking it asks for the official result: add it to fill the database.`]}));
+    S.busy = false; S.tally = [];
+    if (queue.length > 1){ S.queue = queue; return loadQueued(0); }
+    const q = queue[0];
+    S.queue = null; S.qi = 0; S.text = q.text; S.notes = q.notes; S.fromPhoto = false; S.sample = true;
+    S.ticket = q.ticket; S.results = {}; S.check = null; S.editing = false; S.edits = null; S.override = false;
+    S.screenNote = ""; S.screenNotes = {}; S.problems = [];
+    S.phase = q.ticket && q.ticket.ready ? "review" : "ticket";
+    render();
+  } catch (e) {
+    S.busy = false; S.problems = ["Couldn't load a sample ticket: " + e.message]; render();
+  }
+}
+
+// Testing phase only: the five specimen tickets (Toto ordinary, System 7, two draws,
+// four draws, 4D) go through the same multi-ticket read as photos the person picks.
+async function loadSamples(){
+  S.busy = true; S.problems = []; render();
+  try {
+    const files = [];
+    for (let n = 1; n <= MAX_TICKETS; n++){
+      const r = await fetch(`/samples/ticket-${n}.jpg`);
+      if (!r.ok) throw new Error("samples are not available");
+      files.push(new File([await r.blob()], `sample-${n}.jpg`, {type: "image/jpeg"}));
+    }
+    S.busy = false;
+    await readPhoto(files);
+  } catch (e) {
+    S.busy = false; S.problems = ["Couldn't load the sample tickets: " + e.message]; render();
+  }
+}
+async function readPhoto(files){
+  const picked = files.slice(0, MAX_TICKETS);
+  S.busy = true; S.problems = []; S.notes = []; render();
+  const queue = [];
+  for (let i = 0; i < picked.length; i++){
+    say(picked.length > 1 ? `Reading ticket ${i + 1} of ${picked.length}.` : "Reading your photo.");
+    try {
+      const r = await api("/api/ticket/photo", {image: await shrink(picked[i], true)});
+      const t = r.ticket;
+      queue.push({text: r.text, notes: r.notes, ticket: t, problems: t.ready ? [] :
+        (t.problems.length ? t.problems : t.errors.map(e => `Line ${e.line}: ${e.message}`))
+          .concat(r.text ? ["What we read is in the box below. Fix it there, then tap Read my ticket."] : [])});
+    } catch (e) {
+      queue.push({text: "", notes: [], ticket: null,
+        problems: e.problems || ["Couldn't open that photo. Try another, or type the ticket."]});
+      if (e.problems && /limit|a lot of/i.test(e.problems.join(" "))) break;   // over the limit: stop here
+    }
+  }
+  S.busy = false;
+  if (files.length > MAX_TICKETS) queue[0].problems = [`Up to ${MAX_TICKETS} tickets at a time; ` +
+    `the other ${files.length - MAX_TICKETS} weren't read. Add them after these.`].concat(queue[0].problems);
+  S.queue = queue.length > 1 ? queue : null; S.tally = [];
+  if (queue.length > 1) return loadQueued(0);
+  const q = queue[0];
+  S.text = q.text; S.notes = q.notes; S.fromPhoto = !!q.ticket; S.sample = false;
+  S.ticket = q.ticket; S.results = {}; S.check = null; S.editing = false; S.override = false;
+  S.problems = q.problems;
+  if (q.ticket && q.ticket.ready) S.phase = "review";
+  render();
+}
+
+// "Ticket 2 of 5" while working through several photos
+function queueBar(){
+  if (!S.queue || S.phase === "ticket" && !S.ticket) return null;
+  return h("div", {class: "label", style: "color:var(--teal)"}, `TICKET ${S.qi + 1} OF ${S.queue.length}`);
+}
+
+function tallyCard(){
+  if (!S.queue || S.qi < S.queue.length - 1 || !S.tally.length) return null;
+  const won = S.tally.some(t => t.won === null) ? null : S.tally.reduce((a, t) => a + t.won, 0);
+  const stake = S.tally.reduce((a, t) => a + t.stake, 0);
+  return h("div", {class: "card okbox small"}, h("b", {}, `All ${S.queue.length} tickets: `),
+    won === null ? `some prizes still pending, staked ${money(stake)}.` : `won ${money(won)}, staked ${money(stake)}.`);
+}
+
+async function readTicket(){
+  if (!S.text.trim()){ S.problems = ["Type or paste your ticket first."]; return render(); }
+  S.busy = true; S.problems = []; S.fromPhoto = false; S.notes = []; render();
+  try {
+    const t = await api("/api/ticket", {text: S.text});
+    S.ticket = t; S.results = {}; S.check = null; S.editing = false; S.override = false;
+    if (!t.ready){ S.problems = t.problems.length ? t.problems : t.errors.map(e => `Line ${e.line}: ${e.message}`); }
+    else S.phase = "review";
+  } catch (e) { S.problems = e.problems; }
+  S.busy = false; render();
+}
+
+// ---------------------------------------------------------------- 2. confirm what we read
+function boardLabel(e, i){
+  const t = S.ticket;
+  if (t.game === "4d") return `${LETTERS[i]} · ${e.label.toUpperCase()} · BIG $${e.big} · SML $${e.small}`;
+  return `${LETTERS[i]} · ${e.label.toUpperCase()}`;
+}
+
+function stakeBox(){
+  const t = S.ticket, n = t.entries.length, d = t.draws.length;
+  if (t.printed_price === null || t.printed_price === undefined){
+    return h("div", {class: "card small"}, `${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `,
+      h("b", {}, money(t.stake)), ". No PRICE line read, so we can't cross-check it.");
+  }
+  const ok = Math.abs(t.printed_price - t.stake) < 0.005;
+  return h("div", {class: "card small " + (ok ? "okbox" : "warn")},
+    `${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `, h("b", {}, money(t.stake)),
+    ", printed price ", h("b", {}, money(t.printed_price)), ok ? ". They match." : ". They don't match, so check the numbers.");
+}
+
+function viewReview(){
+  const t = S.ticket;
+  if (S.editing && !S.edits) S.edits = t.entries.map(e => e.numbers.slice());
+  const boards = t.entries.map((e, i) => h("div", {class: "board fade", style: `animation-delay:${i * 60}ms`},
+    h("div", {class: "row"}, h("span", {class: "tag"}, boardLabel(e, i)),
+      t.quick_pick ? h("span", {class: "tag"}, "QP") : null),
+    h("div", {class: "balls"}, e.numbers.map((n, j) => S.editing
+      ? h("input", {class: "ball" + (t.game === "4d" ? " four" : ""), value: S.edits[i][j],
+          inputmode: t.game === "4d" ? "text" : "numeric", maxlength: t.game === "4d" ? 4 : 2,
+          "aria-label": `Board ${LETTERS[i]} number ${j + 1}`,
+          oninput: ev => { S.edits[i][j] = ev.target.value.trim().toUpperCase(); }})
+      : h("span", {class: "ball" + (t.game === "4d" ? " four" : "")}, n)))));
+  const warn = t.warnings.length ? h("div", {class: "card warn small"}, h("ul", {}, t.warnings.map(w => h("li", {}, w)))) : null;
+  return [
+    h("h1", {}, "Is this your ticket?"),
+    h("div", {class: "card"},
+      h("div", {class: "field"}, h("span", {}, "Game"), h("b", {}, gameName() + " · " +
+        [...new Set(t.entries.map(e => e.label))].join(", "))),
+      h("div", {class: "field", style: "border:0"}, h("span", {}, "Draws"),
+        h("b", {}, t.draws.map((d, i) => [i ? h("br") : null, `${d.date ? fmtDate(d.date) + " · " : ""}${d.draw_no}`])))),
+    S.sample && !S.fromPhoto && S.notes.length ? h("div", {class: "card okbox small"}, S.notes.map(n => h("div", {}, n))) : null,
+    S.fromPhoto ? h("div", {class: "card warn small"},
+      h("b", {}, "Read from your photo. "), "Check every number against your ticket before you go on.",
+      S.notes.length ? h("ul", {}, S.notes.map(n => h("li", {}, n))) : null) : null,
+    ...boards, stakeBox(), warn, problemsBox(S.problems),
+    h("div", {class: "pair"},
+      h("button", {class: "btn ghost", disabled: S.busy, onclick: S.editing ? saveEdits : () => { S.editing = true; S.edits = null; render(); }},
+        S.editing ? "Save numbers" : "Fix a number"),
+      h("button", {class: "btn go", disabled: S.busy, onclick: async () => { if (S.editing && !(await saveEdits())) return; S.phase = "sealed"; S.problems = []; render(); }},
+        "Looks right")),
+    h("button", {class: "btn ghost", onclick: () => { S.phase = "ticket"; S.problems = []; render(); }}, "Edit the ticket text"),
+  ];
+}
+
+// Rebuild the ticket text from what is on screen, so the server re-checks every fix.
+function ticketText(entries){
+  const t = S.ticket, lines = [], boardAt = {};
+  if (t.game === "toto"){
+    lines.push("TOTO");
+    entries.forEach((nums, i) => {
+      const label = t.entries[i].label;
+      const prefix = label.startsWith("System Roll") ? "System Roll: " : label.startsWith("System") ? label + ": " : "";
+      lines.push(prefix + nums.join(" ")); boardAt[lines.length] = LETTERS[i];
+    });
+  } else {
+    lines.push("4D");
+    let header = null;
+    entries.forEach((nums, i) => {
+      const e = t.entries[i];
+      const want = {Ordinary: "ORDINARY", Roll: "ORDINARY", System: "SYSTEM", iBet: "IBET"}[e.label];
+      if (want !== header){ lines.push(want); header = want; }
+      lines.push(`${nums[0]} BIG $${e.big} SML $${e.small}`); boardAt[lines.length] = LETTERS[i];
+    });
+  }
+  lines.push("DRAW:");
+  for (const d of t.draws){
+    if (d.date){
+      const [y, m, dd] = d.date.split("-");
+      lines.push(`${dd}/${m}/${y.slice(2)} ${d.draw_no}/${y.slice(2)}`);
+    } else lines.push(`draw ${d.draw_no}`);
+  }
+  if (t.printed_price !== null && t.printed_price !== undefined) lines.push(`PRICE: $${Number(t.printed_price).toFixed(2)}`);
+  return {text: lines.join("\n"), boardAt};
+}
+
+async function saveEdits(){
+  const {text, boardAt} = ticketText(S.edits);
+  const where = e => boardAt[e.line] ? `Board ${boardAt[e.line]}: ${e.message}` : e.message;
+  S.busy = true; S.problems = []; render();
+  let ok = false;
+  try {
+    const t = await api("/api/ticket", {text});
+    if (t.ready){ S.text = text; S.ticket = t; S.editing = false; S.edits = null; ok = true; say("Numbers saved."); }
+    else S.problems = t.errors.length ? t.errors.map(where) : t.problems;
+  } catch (e) { S.problems = e.problems; }
+  S.busy = false; render();
+  return ok;
+}
+
+// ---------------------------------------------------------------- 3. sealed / unlock
+function viewSealed(){
+  const t = S.ticket;
+  const need = t.draws.filter(d => !d.on_file);
+  const crowd = t.draws.filter(d => d.source === "shared");
+  const sealedBox = S.auto ? h("div", {class: "sealed working", role: "status"},
+    h("span", {class: "beam", "aria-hidden": "true"}),
+    h("div", {class: "lock"}, svg(LOCK)),
+    h("div", {id: "autocap", class: "small", style: "color:var(--ink)"}, "Opening the official page…"),
+    h("div", {class: "prog", "aria-hidden": "true"}, h("i"))) :
+  h("div", {class: "sealed" + (need.length ? "" : " ready")},
+    h("span", {class: "beam", "aria-hidden": "true"}),
+    h("div", {class: "lock"}, svg(LOCK)),
+    teaser(t.game, !need.length),
+    need.length
+      ? h("div", {class: "small"}, `Your numbers are locked in. Unlock draw ${need.map(d => d.draw_no).join(", ")} on the official page.`)
+      : h("div", {class: "small"}, crowd.length
+          ? `Ready: crowd-sourced result for draw ${crowd.map(d => d.draw_no).join(", ")}. ` +
+            "Screenshots of the official page from at least two people agree, with no one disagreeing."
+          : "The official result for your draw is ready."));
+  const oneTap = canAutoReveal();
+  const actions = need.length
+    ? [oneTap ? h("button", {class: "btn gold", disabled: S.busy, onclick: autoReveal}, S.auto ? "Unlocking…" : "Reveal my result") : null,
+       oneTap ? h("p", {class: "small", style: "margin:0;text-align:center"},
+         "One tap: your phone opens the official page in this app and reads it for you (our server never visits it). A few seconds.") : null,
+       h("button", {class: oneTap ? "btn ghost" : "btn gold", disabled: S.busy, onclick: () => goOfficial(need[0])}, oneTap ? "Unlock on the official page myself" : "Unlock on official page"),
+       h("p", {class: "small", style: "margin:0;text-align:center"},
+         S.photo ? (PHONE ? "Opens singaporepools.com.sg at this draw in a new tab. Screenshot the result, come back and choose it: it's your newest photo."
+                            : "Opens singaporepools.com.sg at this draw in a new tab. Screenshot the result, come back and paste it.")
+                 : "Opens singaporepools.com.sg at this draw in a new tab. Note the winning numbers, then come back."),
+       h("button", {class: "btn ghost", onclick: () => { S.phase = "results"; render(); }}, "I have the numbers already")]
+    : [h("button", {class: "btn go", disabled: S.busy, onclick: () => runCheck()},
+         S.busy ? "Revealing…" : crowd.length ? "Use crowd results · Reveal" : "Reveal my result"),
+       h("p", {class: "small", style: "margin:0;text-align:center"}, "Prefer to see it yourself? ",
+         t.draws.map((d, i) => [i ? ", " : "", h("a", {href: d.official_url, target: "_blank", rel: "noopener"}, `Official draw ${d.draw_no}`)])),
+       // the stored result is the default, but the user can always check against their own screenshot
+       S.photo ? h("div", {class: "card small", style: "display:flex;flex-direction:column;gap:8px"},
+         "Rather use the official page yourself? Screenshot it and use that instead:",
+         h("div", {class: "chips"}, screenButtons(t.draws[0], () => { S.override = true; }, false))) : null,
+       h("button", {class: "btn ghost", onclick: () => { S.override = true; S.phase = "results"; render(); }},
+         "Type the numbers myself")];
+  return [h("h1", {}, need.length ? "Result sealed" : "Ready to reveal"),
+    h("div", {class: "card row"},
+      h("div", {}, h("div", {class: "label"}, "Confirmed ticket"),
+        h("div", {style: "font-size:14px;font-weight:500"}, `${gameName()} · Draw ${t.draws.map(d => d.draw_no).join(", ")}`)),
+      h("span", {class: "label", style: "color:var(--teal)"}, `${t.entries.length} ${t.game === "4d" ? "BET" : "ROW"}${t.entries.length === 1 ? "" : "S"} · ${money(t.stake)}`)),
+    sealedBox,
+    need.some(d => d.shared === "void") ? h("div", {class: "card warn small"},
+      `Other users' screenshots of draw ${need.filter(d => d.shared === "void").map(d => d.draw_no).join(", ")} ` +
+      "disagree, so we don't use them. This draw needs your own screenshot.") : null,
+    need.some(d => d.shared === "waiting") ? h("div", {class: "card small"},
+      `Someone else already sent draw ${need.filter(d => d.shared === "waiting").map(d => d.draw_no).join(", ")}. ` +
+      "Your screenshot confirms it for everyone.") : null,
+    problemsBox(S.problems), actions,
+    h("button", {class: "btn ghost", onclick: () => { S.phase = "review"; S.problems = []; render(); }}, "Back"),
+    helpCard(t.game)];
+}
+
+// Waiting teaser inside the sealed box. Pure decoration: shows no result data.
+function teaser(game, ready){
+  if (game === "4d"){
+    const reel = (k) => h("div", {class: "reel" + (ready ? "" : " dim")},
+      // ~3-4 digits a second; speed and start offset differ per reel so no two rows line up
+      h("div", {style: `animation-duration:${(2.4 + ((k * 7) % 5) * 0.25).toFixed(2)}s;animation-delay:-${((k * 1.37) % 2.4).toFixed(2)}s`},
+        [..."01234567890123456789"].map(c => h("span", {}, c))));
+    return h("div", {class: "reels", "aria-hidden": "true"},
+      ["1ST", "2ND", "3RD"].map((l, r) => h("div", {class: "reelrow"}, h("b", {}, l),
+        [0, 1, 2, 3].map(i => reel(r * 4 + i)))));
+  }
+  // Each ball rolls through its own made-up run of 1-49 (ten numbers, repeated so
+  // the loop is seamless), at its own speed, while the balls tumble in a wave.
+  const ball = (i, add) => {
+    const run = Array.from({length: 10}, (_, k) => ((i * 17 + k * 23 + 7) % 49) + 1);
+    return h("span", {class: "qball roll" + (add ? " add" : ""), style: `animation-delay:${i * 0.12}s,${i * 0.12}s`},
+      // same pace as the 4D reels: ~3-4 numbers a second, own speed and start per ball
+      h("div", {style: `animation-duration:${(2.4 + ((i * 7) % 5) * 0.25).toFixed(2)}s;animation-delay:-${((i * 1.37) % 2.4).toFixed(2)}s`},
+        [...run, ...run].map(n => h("span", {}, String(n).padStart(2, "0")))));
+  };
+  return h("div", {class: "drum", "aria-hidden": "true"},
+    [0, 1, 2, 3, 4, 5].map(i => ball(i, false)),
+    h("span", {class: "plus"}, "+"),
+    ball(6, true));
+}
+
+function goOfficial(d){
+  window.open(d.official_url, "_blank", "noopener");
+  setTimeout(() => showSheet(d), 1200);
+}
+
+function showSheet(d){
+  const sheet = document.getElementById("sheet");
+  const close = () => sheet.classList.add("hidden");
+  sheet.replaceChildren(h("div", {role: "dialog", "aria-label": "Welcome back"},
+    h("h1", {style: "font-size:19px"}, "Welcome back. Got the numbers?"),
+    h("p", {class: "small", style: "margin:0"},
+      `Draw ${d.draw_no}. We only read what you give us; this site never fetches the official page for you.`),
+    multiDraw() ? h("div", {class: "chips", style: "justify-content:center"}, needDraws().map(x =>
+      h("a", {class: "chip", href: x.official_url, target: "_blank", rel: "noopener"}, `Draw ${x.draw_no} ↗`))) : null,
+    ...(S.photo ? screenButtons(d, close, true) : [h("button", {class: "btn ghost", disabled: true}, "Use my screenshot (coming soon)")]),
+    S.photo ? h("p", {class: "small", style: "margin:0;text-align:center"},
+      (multiDraw() ? "Screenshot each draw's result, then pick them all at once: we match them to your draws. "
+                   : "Screenshot the result on the official page (up to 3 to cover the prize table). ") + PHOTO_NOTE) : null,
+    h("button", {class: "btn go", onclick: () => { close(); S.phase = "results"; render(); }}, "Type the numbers instead"),
+    h("button", {class: "chip", style: "align-self:center", onclick: close}, "Not yet")));
+  sheet.classList.remove("hidden");
+}
+
+// Screenshots of the official page fill in the typed-results form; the user
+// still sees every number and taps Reveal, so nothing is taken on trust.
+// All screenshots in one go, for every draw still needing results: the server
+// reads each one and sorts it to its draw by draw number (or date); a prize-table
+// screenshot joins the one before it. Nothing is taken on trust: the numbers land
+// in the form and the user taps Reveal.
+// Put what the server read from the screenshots into the typed-results form, draw by draw.
+// Returns the notes to show (wrong game, and anything the server said).
+function applyScreenDraws(r, want){
+  const notes = [...new Set(r.notes)];
+  for (const [no, v] of Object.entries(r.draws)){
+    const n = Number(no), dd = want.find(x => x.draw_no === n);
+    if (v.game && v.game !== S.ticket.game){
+      notes.push(`Draw ${n}: that's a ${v.game === "4d" ? "4D" : "TOTO"} result, but your ticket is ${gameName()}.`);
+      continue;
+    }
+    const cur = S.results[n] || (S.results[n] = {draw_no: n, numbers: "", amounts: {}, draw_date: dd ? dd.date : null});
+    if (v.numbers) cur.numbers = v.numbers;
+    if (v.amounts) Object.assign(cur.amounts, v.amounts);
+    if (v.draw_date && !cur.draw_date) cur.draw_date = v.draw_date;
+    // a later screenshot of just the prize table adds to what an earlier one gave
+    S.screenNotes[n] = !v.complete && cur.numbers && v.amounts && Object.keys(v.amounts).length
+      ? "Added the prize amounts from this screenshot." : v.prompt;
+  }
+  return notes;
+}
+
+async function readScreens(_d, files){
+  const want = needDraws();
+  S.busy = true; S.problems = []; S.screenNote = ""; S.screenNotes = {}; S.phase = "results"; render();
+  say(files.length > 1 ? `Reading ${files.length} screenshots.` : "Reading your screenshot.");
+  try {
+    // A whole sitting of screenshots: sent 40 at a time (the server's batch size).
+    const all = files.slice(0, 200), r = {draws: {}, notes: []};
+    for (let i = 0; i < all.length; i += 40){
+      if (all.length > 40) say(`Reading screenshots ${i + 1} to ${Math.min(i + 40, all.length)} of ${all.length}.`);
+      const images = await Promise.all(all.slice(i, i + 40).map(f => shrink(f)));
+      try {
+        const part = await api("/api/results/screenshots",
+          {images, draws: want.map(x => ({draw_no: x.draw_no, draw_date: x.date || null}))});
+        Object.assign(r.draws, part.draws); r.notes.push(...part.notes);
+      } catch (e) {
+        if (e.problems) r.notes.push(...e.problems); else throw e;        // one group with nothing for this ticket
+      }
+    }
+    if (!Object.keys(r.draws).length) throw Object.assign(new Error("none"), {problems: r.notes.length ? r.notes
+      : ["No TOTO or 4D result found in these screenshots."]});
+    const notes = applyScreenDraws(r, want);
+    S.screenNote = notes.join(" ");
+    const read = Object.keys(S.screenNotes).length;
+    say(`Read ${read} of ${want.length} draw${want.length > 1 ? "s" : ""}.`);
+  } catch (e) { S.problems = e.problems || ["Couldn't open those screenshots. Type the numbers instead."]; }
+  S.busy = false; render();
+}
+
+// ---------------------------------------------------------------- one-tap unlock (Android app only)
+// In the Android app the page can ask the app to open a draw's official page in its
+// own web view and hand back a picture of it (window.TotoNative.capture). That folds
+// "open the official page, screenshot, come back, choose it, read it" into one tap,
+// hidden behind the sealed-box animation. In a browser there is no TotoNative and
+// nothing here shows: the manual steps stay as they are.
+// Rules: only draws on THIS ticket that we hold no result for (so nothing is
+// opened when the official or an agreed result is already on file), at most
+// AUTO_MAX per tap, one tap = one go. Any failure falls back to the manual steps.
+const AUTO_MAX = 4, AUTO_MIN_MS = 2400;
+const NATIVE = !!(window.TotoNative && typeof window.TotoNative.capture === "function");
+const _caps = {};
+window.__totoCaptured = (id, b64, err) => {              // called by the app when a capture is done
+  const c = _caps[id]; if (!c) return;
+  delete _caps[id]; clearTimeout(c.t);
+  err || !b64 ? c.no(new Error(err || "no picture")) : c.ok(b64);
+};
+function nativeCapture(draw){
+  return new Promise((ok, no) => {
+    const id = "c" + Date.now() + Math.random().toString(36).slice(2, 6);
+    _caps[id] = {ok, no, t: setTimeout(() => { delete _caps[id]; no(new Error("The official page took too long.")); }, 30000)};
+    try { window.TotoNative.capture(id, draw.official_url); }
+    catch (e) { clearTimeout(_caps[id].t); delete _caps[id]; no(e); }
+  });
+}
+function canAutoReveal(){ return NATIVE && S.photo && S.autoCapture && needDraws().length > 0 && needDraws().length <= AUTO_MAX; }
+
+async function autoReveal(){
+  if (S.busy || S.auto) return;
+  const want = needDraws().slice(0, AUTO_MAX);
+  S.auto = {}; S.busy = true; S.problems = []; render();
+  const t0 = Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms));
+  const cap = t => { const el = document.getElementById("autocap"); if (el) el.textContent = t; };
+  const timers = [setTimeout(() => cap("Reading the numbers…"), 1200), setTimeout(() => cap("Matching your rows…"), 2200)];
+  let readAll = false;
+  try {
+    const images = [];
+    for (const d of want) images.push(await nativeCapture(d));
+    const r = await api("/api/results/screenshots",
+      {images, draws: want.map(x => ({draw_no: x.draw_no, draw_date: x.date || null}))});
+    S.screenNote = applyScreenDraws(r, want).join(" ");
+    readAll = want.every(d => r.draws[d.draw_no] && r.draws[d.draw_no].complete);
+    await sleep(Math.max(0, AUTO_MIN_MS - (Date.now() - t0)));       // never a flash: the box gets its moment
+    timers.forEach(clearTimeout); S.auto = null; S.busy = false;
+    if (readAll) return runCheck();
+    S.phase = "results"; S.problems = ["The app read the official page but not every number. Check what it found below, or type the rest."];
+  } catch (e) {
+    timers.forEach(clearTimeout); S.auto = null; S.busy = false;
+    S.problems = [(e.problems && e.problems[0]) || e.message || "Couldn't open the official page from the app."]
+      .concat("Use the steps below instead.");
+  }
+  render();
+}
+
+// ---------------------------------------------------------------- 3b. typed results
+function viewResults(){
+  const t = S.ticket;
+  const need = needDraws();
+  const forms = need.map(d => {
+    const r = S.results[d.draw_no] || (S.results[d.draw_no] = {draw_no: d.draw_no, numbers: "", amounts: {}, draw_date: d.date});
+    const nums = h("input", {inputmode: "numeric", autocomplete: "off", value: r.numbers,
+      placeholder: t.game === "4d" ? "1st 2nd 3rd, then 10 Starter, 10 Consolation" : "2 15 19 20 27 30 + 5",
+      "aria-label": `Winning numbers for draw ${d.draw_no}`, oninput: e => { r.numbers = e.target.value; }});
+    const date = d.date ? null : h("label", {class: "small"}, "Draw date",
+      h("input", {type: "date", value: r.draw_date || "", oninput: e => { r.draw_date = e.target.value; }}));
+    const amounts = t.game === "toto" ? h("details", {},
+      h("summary", {}, "Prize amounts for Groups 1–4 (optional)"),
+      h("div", {class: "amounts"}, [1, 2, 3, 4].map(g => [
+        h("span", {class: "small"}, `Group ${g}`),
+        h("input", {inputmode: "decimal", value: r.amounts[g] || "", placeholder: "Share amount, e.g. 68,513",
+          "aria-label": `Group ${g} share amount`, oninput: e => { r.amounts[g] = e.target.value; }})])),
+      h("p", {class: "small"}, "Leave blank if not shown yet. A win in that group shows as pending, never $0.")) : null;
+    return h("div", {class: "card fade", style: "display:flex;flex-direction:column;gap:10px"},
+      h("div", {class: "row"}, h("span", {class: "label"}, `Draw ${d.draw_no}${d.date ? " · " + fmtDate(d.date) : ""}`),
+        h("a", {class: "small", href: d.official_url, target: "_blank", rel: "noopener"}, "Official page ↗")),
+      S.screenNotes[d.draw_no] ? h("div", {class: "small", style: "color:var(--teal)"}, "From your screenshot: " + S.screenNotes[d.draw_no]) : null,
+      nums, date, amounts);
+  });
+  return [h("h1", {}, "Type the winning numbers"),
+    h("p", {class: "small", style: "margin:0"}, t.game === "4d"
+      ? "All 23 numbers in page order, with leading zeros (0273, not 273)."
+      : "Six winning numbers, then + and the Additional Number."),
+    S.photo && need.length ? h("div", {class: "card small", style: "display:flex;flex-direction:column;gap:8px"},
+      need.length > 1
+        ? `Pick all your screenshots at once (the result and, if needed, the prize table for each of the ${need.length} draws). We match them to your draws.`
+        : "Screenshot the official result, then pick or paste it here.",
+      h("div", {class: "chips"}, screenButtons(need[0], null, false))) : null,
+    S.screenNote ? h("div", {class: "card warn small"}, S.screenNote) : null,
+    forms, problemsBox(S.problems),
+    h("button", {class: "btn go", disabled: S.busy, onclick: () => runCheck()}, S.busy ? "Revealing…" : "Reveal my result"),
+    h("button", {class: "btn ghost", onclick: () => {
+      if (S.override){ S.override = false; S.results = {}; S.screenNotes = {}; S.screenNote = ""; }
+      S.phase = "sealed"; S.problems = []; render(); }}, "Back")];
+}
+
+async function runCheck(){
+  S.busy = true; S.problems = []; render();
+  const results = Object.values(S.results).filter(r => r.numbers && r.numbers.trim())
+    .map(r => ({draw_no: r.draw_no, numbers: r.numbers, draw_date: r.draw_date || null,
+                amounts: Object.fromEntries(Object.entries(r.amounts).filter(([, v]) => v && v.trim()))}));
+  try {
+    const c = await api("/api/check", {text: S.text, results});
+    if (c.status === "need_results"){
+      S.ticket = c.ticket; S.phase = "results";
+      S.problems = [`Add the winning numbers for draw ${c.need.join(", ")}.`];
+    } else {
+      S.check = c; S.phase = "reveal";
+      if (S.queue) S.tally[S.qi] = {won: c.totals.won, stake: c.totals.stake};   // for the all-tickets total
+    }
+  } catch (e) { S.problems = e.problems; }
+  S.busy = false; render();
+}
+
+// ---------------------------------------------------------------- 4. reveal, staged
+// Order (from the prototype): each draw's balls drop, then each of your boards
+// lights up with its prize pill, and only then the verdict. Reduced motion skips the wait.
+const SHORT = {first: "1ST", second: "2ND", third: "3RD", starter: "STARTER", consolation: "CONSOL"};
+
+function pillFor(row, game){
+  if (game === "4d"){
+    if (!row.categories.length) return {text: "NO PRIZE", cls: ""};
+    return {text: `${row.categories.map(c => SHORT[c]).join(" + ")} · ${money(row.won)}`, cls: "win"};
+  }
+  if (!row.groups.length) return {text: "NO PRIZE", cls: ""};
+  const g = row.groups[0];
+  const what = row.groups.length === 1 ? `GROUP ${g.group}${g.count > 1 ? " ×" + g.count : ""}`
+                                       : `GROUP ${g.group} + ${row.groups.length - 1} MORE`;
+  return row.pending ? {text: `${what} · PENDING`, cls: "pend"} : {text: `${what} · ${money(row.won)}`, cls: "win"};
+}
+
+function drawPanel(d, t0){
+  const head = h("div", {class: "row"}, h("span", {class: "label"}, `Draw ${d.draw_no} · ${fmtDate(d.date)}`),
+    h("a", {class: "small", href: d.official_url, target: "_blank", rel: "noopener"}, "Official ↗"));
+  const src = d.source === "captured"
+    ? h("div", {class: "src"}, "Captured from the official page after the draw.")
+    : d.source === "shared"
+    ? h("div", {class: "src user"}, "From other users' screenshots of the official page (two agreed). Check it against the official page.")
+    : h("div", {class: "src user"}, "As entered by you. Check it against the official page.");
+  if (d.game === "toto"){
+    return h("div", {class: "card"}, head,
+      h("div", {class: "draw-strip", style: "margin-top:10px"},
+        d.winning.map((n, i) => h("span", {class: "dball", style: `animation-delay:${t0 + i * 110}ms`}, n)),
+        h("span", {class: "small"}, "+"),
+        h("span", {class: "dball add", style: `animation-delay:${t0 + 6 * 110}ms`}, d.additional)), src);
+  }
+  const mine = new Set(S.check.ticket.entries.flatMap(e => e.numbers));
+  const grid = (label, list, delay) => [h("div", {class: "label", style: "margin-top:10px"}, label),
+    h("div", {class: "grid fade", style: `animation-delay:${delay}ms`}, list.map(n => h("span", {class: mine.has(n) ? "mine" : ""}, n)))];
+  return h("div", {class: "card"}, head,
+    h("div", {class: "top3", style: "margin-top:10px"},
+      [["1ST", d.first], ["2ND", d.second], ["3RD", d.third]].map(([l, n], i) =>
+        [h("b", {}, l), h("span", {class: "num", style: `animation-delay:${t0 + i * 200}ms` + (mine.has(n) ? ";color:var(--teal)" : "")}, n)])),
+    grid("Starter", d.starter, t0 + 600), grid("Consolation", d.consolation, t0 + 760), src);
+}
+
+function boardRow(r, i, b, game, t){
+  const p = pillFor(r, game);
+  return h("div", {class: "board revealed " + (p.cls === "win" ? "win" : p.cls === "pend" ? "pend" : ""),
+                    style: `animation-delay:${t + 300}ms`},
+    h("div", {class: "row"},
+      h("span", {class: "tag"}, `${LETTERS[i]} · ${game === "4d" ? r.label.toUpperCase() : r.label.toUpperCase()}`),
+      h("span", {class: "pill " + p.cls, style: `animation-delay:${t + 300}ms`}, p.text)),
+    h("div", {class: "balls"}, r.cells.map((c, ci) => h("span", {
+      class: `ball${game === "4d" ? " four" : ""} ${c.mark}`,
+      style: `animation-delay:${t + ci * 60}ms,${t + ci * 60 + 600}ms`}, c.t))));
+}
+
+function viewReveal(){
+  const c = S.check, rv = c.reveal, game = c.ticket.game;
+  let t = 200;
+  const blocks = [];
+  c.draws.forEach((d, di) => {
+    blocks.push(drawPanel(d, t));
+    t += game === "4d" ? 1000 : 7 * 110 + 250;
+    c.boards[di].rows.forEach((r, i) => { blocks.push(boardRow(r, i, c.boards[di], game, t)); t += 420; });
+    t += 150;
+  });
+  const late = t + 150;
+  const tot = c.totals;
+  const net = tot.net === null ? "—" : (tot.net >= 0 ? "+" : "−") + money(Math.abs(tot.net));
+  const badge = {won: "WINNER", pending: "PRIZE PENDING", no_win: "NO WIN"}[rv.state];
+  const fx = rv.state === "won"
+    ? [h("span", {class: "ring", style: `animation-delay:${late}ms`}), [0, 1, 2, 3, 4, 5].map(i => h("span", {class: "spark",
+        style: `left:${15 + i * 14}%;background:${i % 2 ? "var(--gold)" : "var(--teal)"};animation-delay:${late + 200 + i * 90}ms`}))]
+    : [];
+  setTimeout(() => {
+    const el = document.getElementById("verdict");
+    if (el && !matchMedia("(prefers-reduced-motion: reduce)").matches) el.scrollIntoView({behavior: "smooth", block: "center"});
+    say(`${rv.headline}. ${rv.subline}`);
+  }, late);
+  return [
+    h("h1", {}, c.draws.length > 1 ? `Your ${c.draws.length} draws` : "The draw"),
+    blocks,
+    h("div", {class: `result late ${rv.state}`, id: "verdict", style: `animation-delay:${late}ms`}, fx,
+      h("span", {class: "badge", style: `animation-delay:${late + 100}ms`}, badge),
+      h("h2", {}, rv.headline), h("div", {class: "small"}, rv.subline),
+      h("div", {class: "tiles"},
+        h("div", {class: tot.won === null ? "w pend" : "w"}, h("small", {}, "WON"), h("strong", {}, tot.won === null ? "Pending" : money(tot.won))),
+        h("div", {}, h("small", {}, "STAKE"), h("strong", {}, money(tot.stake))),
+        h("div", {}, h("small", {}, "NET"), h("strong", {}, net)))),
+    h("div", {class: "late", style: `animation-delay:${late + 250}ms;display:flex;flex-direction:column;gap:14px`},
+      rv.claim ? h("div", {class: "card small"}, rv.claim) : null,
+      h("div", {class: rv.stake.state === "mismatch" ? "card warn small" : "card small"}, rv.stake.message,
+        rv.needs_review ? h("div", {style: "margin-top:8px"},
+          h("button", {class: "chip", onclick: () => { S.phase = "review"; render(); }}, "Check the bets")) : null),
+      h("div", {class: "card small"}, rv.attribution),
+      tallyCard(),
+      S.queue && S.qi < S.queue.length - 1
+        ? h("button", {class: "btn go", onclick: () => loadQueued(S.qi + 1)}, `Next ticket (${S.qi + 2} of ${S.queue.length})`)
+        : h("button", {class: "btn go", onclick: () => { S.text = ""; restart(); }}, "Check another ticket"),
+      helpCard(game)),
+  ];
+}
+
+// ---------------------------------------------------------------- help complete this year's results
+// The site never fetches the official page. Results for the year are built from
+// people's screenshots of it: each missing draw gets a direct link to its
+// official page; screenshots added here count once two people agree.
+function loadWanted(game){
+  if (S.wanted[game] !== undefined) return;
+  S.wanted[game] = null;                                       // loading
+  api("/api/results/wanted?game=" + game)
+    .then(w => { S.wanted[game] = w; render(); })
+    .catch(() => { S.wanted[game] = false; });
+}
+
+function helpCard(game){
+  if (!S.photo || !game) return null;
+  loadWanted(game);
+  const w = S.wanted[game];
+  if (!w || !w.wanted.length) return null;
+  const name = game === "4d" ? "4D" : "TOTO", hp = S.help;
+  // "ready" means usable for everyone (official, or two people agree). Draws one person has
+  // sent are already in the owner's database but wait for a second person, so they are
+  // counted apart (owner 22 Oct: "1 of 84 ready" read as if the rest were not recorded).
+  const waiting = w.waiting !== undefined ? w.waiting : w.wanted.filter(x => x.state === "waiting").length;
+  const none = w.missing !== undefined ? w.missing : w.wanted.length - waiting;
+  const pct = Math.round(100 * w.usable / w.draws), pctWait = Math.round(100 * waiting / w.draws);
+  const add = files => contribute(game, files);
+  const choose = h("button", {class: "btn ghost", disabled: hp.busy,
+    onclick: () => pickImages(true, add)}, hp.busy ? "Reading…" : (PHONE ? "🖼 Add screenshots" : "Upload screenshots"));
+  const paste = CAN_PASTE ? h("button", {class: "chip", disabled: hp.busy, onclick: () => pasteInto(add)}, "📋 Paste screenshot") : null;
+  return h("details", {class: "card help", open: hp.open || null, ontoggle: e => { hp.open = e.target.open; }},
+    h("summary", {},
+      h("span", {class: "label"}, `Help complete ${name} ${w.year}`),
+      h("span", {class: "small"}, ` · ${w.usable} ready · ${waiting} waiting · ${none} to go`)),
+    h("div", {class: "hb"},
+    h("div", {class: "bar", "aria-hidden": "true"}, h("i", {style: `width:${pct}%`}), h("i", {class: "wait", style: `width:${pctWait}%`})),
+    h("p", {class: "small", style: "margin:0"},
+      `Of ${w.draws} draws this year, ${w.usable} ${w.usable === 1 ? "is" : "are"} ready for everyone. ` +
+      (waiting ? `${waiting} ${waiting === 1 ? "has" : "have"} one screenshot and ${waiting === 1 ? "needs" : "need"} a second person to agree (gold •). ` : "") +
+      `${none} ${none === 1 ? "has" : "have"} none yet. ` +
+      "Tap a draw, screenshot the result, then add all your screenshots at once. " +
+      "A draw is ready for everyone once two people's screenshots agree."),
+    h("div", {class: "chips draws"}, w.wanted.map(x =>
+      h("a", {class: "chip" + (x.state === "waiting" ? " one" : ""), href: x.official_url, target: "_blank", rel: "noopener",
+        title: x.state === "waiting" ? "One more screenshot makes this draw usable" : "No result yet"},
+        `${x.draw_no}${x.state === "waiting" ? " •" : ""} ↗`))),
+    h("div", {class: "small"}, "• one person has sent it: it's saved, and a second matching screenshot makes it ready"),
+    problemsBox(hp.problems),
+    hp.done ? h("div", {class: "card small", style: "color:var(--teal)"}, hp.done) : null,
+    PHONE ? [choose, paste] : [paste || choose, paste ? choose : null],
+    PHONE ? h("p", {class: "small", style: "margin:0"}, INSTALLED
+      ? "Quicker: open the screenshot, tap Share, pick TOTO Check. It's read straight away."
+      : "Quicker: install this app (browser menu), then Share a screenshot straight to it.") : null,
+    h("p", {class: "small", style: "margin:0"}, PHOTO_NOTE.replace("Photos", "Screenshots"))));
+}
+
+async function contribute(game, files){
+  const hp = S.help;
+  hp.busy = true; hp.problems = []; hp.done = null; hp.open = true; render();
+  const all = files.slice(0, 200), got = [], notes = [];
+  try {
+    for (let i = 0; i < all.length; i += 40){
+      say(all.length > 40 ? `Reading screenshots ${i + 1} to ${Math.min(i + 40, all.length)} of ${all.length}.`
+                          : `Reading ${all.length} screenshot${all.length > 1 ? "s" : ""}.`);
+      const images = await Promise.all(all.slice(i, i + 40).map(f => shrink(f)));
+      try {
+        const r = await api("/api/results/contribute", {images, game});
+        got.push(...r.draws); notes.push(...r.notes);
+      } catch (e) { if (e.problems) notes.push(...e.problems); else throw e; }
+    }
+    const ok = got.filter(d => d.added), ready = ok.filter(d => d.state === "agreed");
+    const bad = got.filter(d => !d.added);
+    if (!got.length) hp.problems = notes.length ? [...new Set(notes)] : ["No TOTO or 4D result found in these screenshots."];
+    else {
+      hp.done = `Thanks: ${ok.length} draw${ok.length === 1 ? "" : "s"} added` +
+        (ready.length ? `, ${ready.length} now ready for everyone (${ready.map(d => d.draw_no).join(", ")})` : "") +
+        (ok.length - ready.length ? `, ${ok.length - ready.length} waiting for a second person` : "") + ".";
+      hp.problems = [...bad.map(d => `Draw ${d.draw_no}: ${d.why}`), ...new Set(notes)];
+    }
+    S.wanted = {};                                            // reload the list
+    say(hp.done || hp.problems[0] || "");
+  } catch (e) { hp.problems = e.problems || ["Couldn't read those screenshots. Try again."]; }
+  hp.busy = false; render();
+}
+
+function restart(){ S.phase = "ticket"; S.ticket = null; S.check = null; S.results = {}; S.problems = []; S.editing = false; S.edits = null;
+  S.fromPhoto = false; S.notes = []; S.screenNote = ""; S.screenNotes = {}; S.override = false; S.queue = null; S.tally = []; render(); }
+
+api("/api/health").then(r => {
+  S.photo = !!r.photo_reading; S.testing = r.testing; S.autoCapture = r.auto_capture !== false;
+  // show the Photo button and any testing banner once we know; don't redraw under someone typing
+  if ((S.photo || S.testing) && S.phase === "ticket" && (document.activeElement || {}).id !== "ticket") render();
+}).catch(() => {});
+render();
+
+// Android Share target: the service worker kept the pictures from Share in the
+// "toto-shared" cache and sent us here as /?shared=N. Read them back, delete them
+// at once, and treat them like screenshots chosen from the gallery. A fresh launch
+// has no ticket in memory (none is ever stored), so they go to "Help complete this
+// year's results", which counts them once two people agree.
+async function takeShared(){
+  const q = new URLSearchParams(location.search).get("shared");
+  if (q === null) return;
+  history.replaceState(null, "", "/");
+  const files = [];
+  try {
+    const cache = await caches.open("toto-shared");
+    for (const req of await cache.keys()){
+      const blob = await (await cache.match(req)).blob();
+      files.push(new File([blob], "shared." + ((blob.type || "image/jpeg").split("/")[1] || "jpg"), {type: blob.type || "image/jpeg"}));
+      await cache.delete(req);
+    }
+  } catch (e) {}
+  if (!files.length){
+    S.help.problems = ["The shared pictures didn't arrive. Try Share again, or add them from the unlock step with Choose screenshot."];
+    S.help.open = true; return render();
+  }
+  contribute(undefined, files);
+}
+takeShared();
+
+// P4-06: installable app. The service worker never caches /api/, so results are always fresh.
+if ("serviceWorker" in navigator){
+  addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

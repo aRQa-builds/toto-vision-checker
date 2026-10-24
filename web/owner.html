@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0D0A1E">
+<title>Results Owner View</title>
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Owner view of the results database (owner.py). Same Arcade Drum palette as
+   the checker; dark single theme by design. */
+:root{
+  --bg:#0D0A1E; --card:#17123A; --card2:#1D1747; --line:#2E2760; --line2:#3B3270;
+  --ink:#F4F1FF; --muted:#9A93C9; --dim:#6E679E; --teal:#36E2D0; --gold:#FFD84A; --pink:#FF4FA3;
+  --head:'Unbounded',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);-webkit-text-size-adjust:100%}
+button,input{font:inherit;color:inherit}
+a{color:var(--teal)}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--head);font-weight:700;font-size:14px;letter-spacing:.08em}
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--gold);display:block}
+h1{margin:0;font-family:var(--head);font-weight:700;font-size:21px;line-height:1.2}
+.small{font-size:12px;color:var(--muted);line-height:1.5}
+.card{border-radius:16px;background:var(--card);border:1.5px solid var(--line);padding:12px 14px}
+.tabs{display:flex;gap:8px}
+.tab{flex:1;appearance:none;border:1.5px solid var(--line2);background:transparent;border-radius:999px;padding:10px;font-family:var(--head);font-weight:700;font-size:13px;cursor:pointer;min-height:44px}
+.tab[aria-selected=true]{background:var(--teal);border-color:var(--teal);color:var(--bg)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line2);background:transparent;border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer;min-height:34px}
+.chip[aria-pressed=true]{border-color:var(--ink);background:var(--card2)}
+.chip b{font-weight:500;margin-left:4px;color:var(--muted)}
+.search{display:flex;gap:8px}
+input{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line2);border-radius:12px;padding:11px 12px;font-size:16px;outline:none}
+input:focus{border-color:var(--teal)}
+.btn{appearance:none;border:1.5px solid var(--line2);background:var(--card2);border-radius:12px;padding:10px 14px;font-size:13px;cursor:pointer;min-height:44px;white-space:nowrap}
+.btn.go{background:var(--teal);border-color:var(--teal);color:var(--bg);font-family:var(--head);font-weight:700}
+.list{display:flex;flex-direction:column;gap:10px}
+.draw{display:flex;flex-direction:column;gap:8px}
+.dh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dn{font-family:var(--head);font-weight:700;font-size:16px}
+.dd{color:var(--muted);font-size:13px}
+.state{font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1.5px solid}
+.s-official{color:var(--teal);border-color:var(--teal)}
+.s-agreed{color:var(--gold);border-color:var(--gold)}
+.s-waiting{color:var(--muted);border-color:var(--line2)}
+.s-void{color:var(--pink);border-color:var(--pink)}
+.balls{display:flex;gap:6px;flex-wrap:wrap}
+.ball{min-width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1.5px solid var(--line2);font-size:14px;font-variant-numeric:tabular-nums}
+.ball.add{border-color:var(--gold);color:var(--gold)}
+.fd{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;font-variant-numeric:tabular-nums}
+.fd span:nth-child(odd){color:var(--muted)}
+.fd span:nth-child(even){overflow-wrap:anywhere}
+.groups{display:flex;gap:6px;flex-wrap:wrap;font-size:12px}
+.groups span{background:var(--card2);border-radius:8px;padding:4px 8px}
+.meta{font-size:12px;color:var(--muted);line-height:1.6}
+.meta .warn{color:var(--pink)}
+.yr{display:flex;flex-direction:column;gap:8px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
+details summary{cursor:pointer;color:var(--muted);font-size:12px}
+details p{margin:6px 0 0;font-size:12px;color:var(--muted);overflow-wrap:anywhere;line-height:1.6}
+.empty{text-align:center;color:var(--muted);padding:28px 12px}
+.err{color:var(--pink)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <div class="brand"><i></i>OWNER VIEW</div>
+    <a class="small" href="/">Checker</a>
+  </div>
+  <h1>Results database</h1>
+  <p class="small" id="intro">Every draw on file: official captures and users' screenshot reads, newest first.</p>
+
+  <section class="card" id="locked" hidden>
+    <p style="margin:0 0 10px">This view needs the owner key.</p>
+    <p class="small" style="margin:0 0 10px">On Grayskull run <code>py -3 -m lottery_checker.owner</code> and open the link it prints, or paste the key here.</p>
+    <div class="search">
+      <input id="keyIn" type="password" autocomplete="off" placeholder="Owner key" aria-label="Owner key">
+      <button class="btn go" id="keyGo">Unlock</button>
+    </div>
+    <p class="small err" id="keyErr" hidden></p>
+  </section>
+
+  <div id="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-game="toto" aria-selected="true">TOTO</button>
+        <button class="tab" role="tab" data-game="4d" aria-selected="false">4D</button>
+      </div>
+      <form class="search" id="find">
+        <input id="q" inputmode="text" placeholder="Draw no. or date (19/10/26)" aria-label="Draw number or date">
+        <button class="btn go" type="submit">Find</button>
+        <button class="btn" type="button" id="clear" hidden>All</button>
+      </form>
+      <div class="chips" id="states"></div>
+      <p class="small err" id="err" hidden></p>
+      <div id="years"></div>
+      <div class="list" id="list" aria-live="polite"></div>
+      <div class="search">
+        <button class="btn" id="csv" style="flex:1">Download all (CSV)</button>
+        <button class="btn" id="refresh" style="flex:1">Refresh</button>
+      </div>
+      <button class="btn" id="forget">Forget the key on this device</button>
+    </div>
+  </div>
+</main>
+<script>
+const KEY = "toto-owner-key";
+const S = {game: "toto", q: "", state: "all", data: null};
+const $ = id => document.getElementById(id);
+
+function store(k) { try { k ? localStorage.setItem(KEY, k) : localStorage.removeItem(KEY); } catch (e) {} }
+function stored() { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+let key = "";
+(function takeKeyFromLink() {
+  const m = location.hash.match(/key=([0-9a-f]{32,})/i);
+  if (m) { key = m[1]; store(key); history.replaceState(null, "", location.pathname); }   // the key leaves the address bar
+  else key = stored();
+})();
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+async function api(path) {
+  const r = await fetch(path, {headers: {"X-Owner-Key": key}, cache: "no-store"});
+  if (r.status === 401 || r.status === 404) { lock(r.status === 404 ? "The owner view is off on the server (no data\\owner.key)." : "That key isn't right."); return null; }
+  if (!r.ok) { let m = "Couldn't load (" + r.status + ")."; try { const j = await r.json(); if (typeof j.detail === "string") m = j.detail; } catch (e) {} throw new Error(m); }
+  return r;
+}
+
+function lock(msg) {
+  $("view").hidden = true; $("locked").hidden = false;
+  $("keyErr").hidden = !msg; $("keyErr").textContent = msg || "";
+}
+
+async function load() {
+  $("err").hidden = true;
+  try {
+    const r = await api(`/api/owner/results?game=${S.game}&q=${encodeURIComponent(S.q)}`);
+    if (!r) return;
+    S.data = await r.json();
+    $("locked").hidden = true; $("view").hidden = false;
+    render();
+  } catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
+}
+
+function fmtMoney(v) { return v == null ? "pending" : "S$" + Number(v).toLocaleString("en-SG", {maximumFractionDigits: 0}); }
+function fmtDate(iso) {
+  if (!iso) return "date not read";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-SG", {weekday: "short", day: "2-digit", month: "short", year: "numeric"});
+}
+function fmtAt(iso) { return iso ? new Date(iso).toLocaleString("en-SG", {day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"}) : ""; }
+
+function render() {
+  const d = S.data, c = d.counts;
+  const chips = $("states"); chips.replaceChildren();
+  const total = c.official + c.agreed + c.waiting + c.void;
+  for (const [s, label, n] of [["all", "All", total], ["official", "Official", c.official], ["agreed", "Crowd agreed", c.agreed],
+                               ["waiting", "Waiting", c.waiting], ["void", "Void", c.void]]) {
+    const b = el("button", "chip", label); b.type = "button";
+    b.append(el("b", null, n)); b.setAttribute("aria-pressed", S.state === s);
+    b.onclick = () => { S.state = s; render(); };
+    chips.append(b);
+  }
+  $("clear").hidden = !S.q;
+  const ys = $("years"); ys.replaceChildren();
+  for (const [y, cv] of Object.entries(d.years || {})) {
+    const box = el("section", "card yr");
+    const h = el("div", "dh");
+    h.append(el("span", "dn", `${S.game === "toto" ? "TOTO" : "4D"} ${y}`), el("span", "dd", `#${cv.from}–#${cv.to}`));
+    const bar = el("div", "bar"); const fill = el("i"); fill.style.width = (100 * cv.usable / cv.draws).toFixed(1) + "%"; bar.append(fill);
+    box.append(h, bar, el("div", "small", `${cv.usable} of ${cv.draws} draws usable · ${cv.missing} missing`));
+    if (cv.missing) {
+      const det = el("details"); det.append(el("summary", null, "Missing draw numbers"), el("p", null, cv.missing_draws.join(" ")));
+      box.append(det);
+    }
+    const b = el("button", "btn", `Download ${y} CSV`); b.type = "button"; b.onclick = () => csv(y);
+    box.append(b); ys.append(box);
+  }
+  const list = $("list"); list.replaceChildren();
+  const rows = d.draws.filter(r => S.state === "all" || r.state === S.state);
+  if (!rows.length) {
+    list.append(el("div", "card empty", S.q ? `Nothing on file for “${S.q}”.` :
+      total ? "No draws in this state." : "No draws on file yet. The capture adds each draw after it's drawn; users' screenshots add the rest."));
+    return;
+  }
+  for (const r of rows) list.append(card(r));
+}
+
+function card(r) {
+  const c = el("article", "card draw");
+  const h = el("div", "dh");
+  const left = el("div"); left.append(el("span", "dn", "#" + r.draw_no + " "), el("span", "dd", fmtDate(r.draw_date)));
+  h.append(left, el("span", "state s-" + r.state, {official: "official", agreed: "crowd agreed", waiting: "waiting", void: "void"}[r.state]));
+  c.append(h);
+  if (r.game === "toto" && r.winning && r.winning.length) {
+    const b = el("div", "balls");
+    for (const n of r.winning) b.append(el("span", "ball", String(n).padStart(2, "0")));
+    if (r.additional != null) { b.append(el("span", "small", "+")); b.append(el("span", "ball add", String(r.additional).padStart(2, "0"))); }
+    c.append(b);
+    const sh = r.shares || {};
+    const g = el("div", "groups");
+    for (let i = 1; i <= 4; i++) if (i in sh || String(i) in sh) g.append(el("span", null, `G${i} ${fmtMoney(sh[i] ?? sh[String(i)])}`));
+    if (g.childElementCount) c.append(g);
+  } else if (r.game === "4d" && r.first) {
+    const f = el("div", "fd");
+    f.append(el("span", null, "1st"), el("span", null, r.first), el("span", null, "2nd"), el("span", null, r.second),
+             el("span", null, "3rd"), el("span", null, r.third),
+             el("span", null, "Starter"), el("span", null, (r.starter || []).join(" ")),
+             el("span", null, "Consol."), el("span", null, (r.consolation || []).join(" ")));
+    c.append(f);
+  }
+  const m = el("div", "meta");
+  if (r.state === "official") {
+    m.append(el("div", null, "Captured from Singapore Pools " + fmtAt(r.captured_at)));
+    if (r.crowd_also) m.append(el("div", null, "Users also sent screenshots (" + r.crowd_also + "); the official result is used."));
+  }
+  const cr = r.crowd;
+  if (cr) {
+    const dev = Object.entries(cr.devices || {}).map(([k, v]) => v > 1 ? `${k} ×${v}` : k).join(", ");
+    m.append(el("div", null, `${cr.people} ${cr.people === 1 ? "person" : "people"} · ${dev || "device unknown"}`));
+    if (cr.first_at) m.append(el("div", null, cr.first_at === cr.last_at ? "Sent " + fmtAt(cr.first_at) : `First ${fmtAt(cr.first_at)} · last ${fmtAt(cr.last_at)}`));
+    if (r.state === "waiting") m.append(el("div", null, "Needs one more person's screenshot to be used."));
+    if (cr.void_why) {
+      m.append(el("div", "warn", "Void: " + cr.void_why + ". Never used; users add their own screenshot."));
+      for (const rd of cr.readings || []) {
+        const n = rd.numbers || {};
+        const txt = n.winning ? n.winning.map(x => String(x).padStart(2, "0")).join(" ") + (n.additional != null ? " + " + String(n.additional).padStart(2, "0") : "")
+                              : [n.first, n.second, n.third].filter(Boolean).join(" ");
+        m.append(el("div", null, `  read ${txt} (${rd.people})`));
+      }
+      const dates = Object.entries(cr.dates_read || {});
+      if (dates.length > 1) m.append(el("div", null, "  dates read: " + dates.map(([k, v]) => `${k} (${v})`).join(", ")));
+    }
+  }
+  if (m.childElementCount) c.append(m);
+  return c;
+}
+
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  S.game = t.dataset.game; S.state = "all";
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  load();
+});
+$("find").onsubmit = e => { e.preventDefault(); S.q = $("q").value.trim(); S.state = "all"; load(); };
+$("clear").onclick = () => { S.q = ""; $("q").value = ""; load(); };
+$("refresh").onclick = load;
+$("keyGo").onclick = () => { key = $("keyIn").value.trim(); $("keyIn").value = ""; if (key) { store(key); load(); } };
+$("keyIn").onkeydown = e => { if (e.key === "Enter") $("keyGo").click(); };
+$("forget").onclick = () => { store(""); key = ""; lock("Key forgotten on this device."); };
+async function csv(year) {
+  try {
+    const r = await api(`/api/owner/results.csv?game=${S.game}` + (year ? `&year=${year}` : ""));
+    if (!r) return;
+    const url = URL.createObjectURL(await r.blob());
+    const a = el("a"); a.href = url; a.download = year ? `${S.game}-${year}.csv` : `${S.game}-results.csv`;
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
+}
+$("csv").onclick = () => csv();
+
+if (key) load(); else lock();
+</script>
+</body>
+</html>
