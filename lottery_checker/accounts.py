@@ -68,7 +68,97 @@ HISTORY_LIMIT = 500
 
 
 def clean_entry(payload: dict) -> dict:
-    raise NotImplementedError
+    if not isinstance(payload, dict):
+        raise ValueError("Payload must be a dictionary")
+
+    # Validate game
+    game = payload.get("game")
+    if game not in ("toto", "4d"):
+        raise ValueError("Game must be 'toto' or '4d'")
+
+    # Validate draw_no
+    draw_no = payload.get("draw_no")
+    if isinstance(draw_no, bool) or not isinstance(draw_no, int):
+        raise ValueError("draw_no must be an integer")
+    if draw_no < 1 or draw_no > 99999:
+        raise ValueError("draw_no must be between 1 and 99999")
+
+    # Validate draw_date
+    draw_date = payload.get("draw_date")
+    try:
+        date.fromisoformat(draw_date)
+    except (ValueError, TypeError):
+        raise ValueError("draw_date must be a valid ISO date (YYYY-MM-DD)")
+
+    # Validate claim_by
+    claim_by = payload.get("claim_by")
+    if claim_by is not None:
+        try:
+            date.fromisoformat(claim_by)
+        except (ValueError, TypeError):
+            raise ValueError("claim_by must be a valid ISO date (YYYY-MM-DD) or None")
+
+    # Validate bets
+    bets = payload.get("bets")
+    if not isinstance(bets, list):
+        raise ValueError("bets must be a list")
+    if len(bets) < 1 or len(bets) > 30:
+        raise ValueError("bets must contain between 1 and 30 entries")
+
+    cleaned_bets = []
+    for bet in bets:
+        if not isinstance(bet, dict):
+            raise ValueError("Each bet must be a dictionary")
+
+        label = bet.get("label")
+        if not isinstance(label, str) or not re.match(r"^[A-Za-z0-9 ]{1,40}$", label):
+            raise ValueError("bet label must match ^[A-Za-z0-9 ]{1,40}$")
+
+        numbers = bet.get("numbers")
+        if not isinstance(numbers, list):
+            raise ValueError("bet numbers must be a list")
+        if len(numbers) < 1 or len(numbers) > 12:
+            raise ValueError("bet numbers must contain between 1 and 12 items")
+        for num in numbers:
+            if not isinstance(num, str) or not re.match(r"^\d{1,4}$", num):
+                raise ValueError("each number must be a string of digits with length 1-4")
+
+        stake = bet.get("stake")
+        if isinstance(stake, bool) or not isinstance(stake, (int, float)):
+            raise ValueError("bet stake must be a number")
+        if stake < 0 or stake > 10000:
+            raise ValueError("bet stake must be between 0 and 10000")
+
+        cleaned_bets.append({
+            "label": label,
+            "numbers": numbers,
+            "stake": float(stake)
+        })
+
+    # Validate stake (whole ticket)
+    stake = payload.get("stake")
+    if isinstance(stake, bool) or not isinstance(stake, (int, float)):
+        raise ValueError("stake must be a number")
+    if stake < 0 or stake > 100000:
+        raise ValueError("stake must be between 0 and 100000")
+
+    # Validate won
+    won = payload.get("won")
+    if won is not None:
+        if isinstance(won, bool) or not isinstance(won, (int, float)):
+            raise ValueError("won must be a number or None")
+        if won < 0 or won > 1e9:
+            raise ValueError("won must be between 0 and 1e9")
+
+    return {
+        "game": game,
+        "draw_no": draw_no,
+        "draw_date": draw_date,
+        "bets": cleaned_bets,
+        "stake": stake,
+        "won": won,
+        "claim_by": claim_by
+    }
 
 
 class Accounts:
@@ -156,19 +246,94 @@ class Accounts:
             db.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash(token),))
 
     def save_history(self, user_id: int, payload: dict) -> int:
-        raise NotImplementedError
+        cleaned = clean_entry(payload)
+
+        with self._db() as db:
+            # Check history limit
+            count = db.execute(
+                "SELECT COUNT(*) FROM history WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()[0]
+
+            if count >= HISTORY_LIMIT:
+                raise ValueError("Your history is full. Delete some entries first.")
+
+            now = self.clock()
+            year = datetime.fromtimestamp(now, timezone.utc).year
+
+            # Insert new record
+            cur = db.execute(
+                "INSERT INTO history (user_id, saved_at, game, draw_no, draw_date, bets, stake, won, claim_by, purge_after) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    user_id,
+                    now,
+                    cleaned["game"],
+                    cleaned["draw_no"],
+                    cleaned["draw_date"],
+                    json.dumps(cleaned["bets"]),
+                    cleaned["stake"],
+                    cleaned["won"],
+                    cleaned["claim_by"],
+                    f"{year+1}-12-31"
+                )
+            )
+
+            return int(cur.lastrowid)
 
     def list_history(self, user_id: int) -> list:
-        raise NotImplementedError
+        with self._db() as db:
+            rows = db.execute(
+                "SELECT id, saved_at, game, draw_no, draw_date, bets, stake, won, claim_by FROM history WHERE user_id = ? ORDER BY id DESC",
+                (user_id,),
+            ).fetchall()
+
+        result = []
+        for row in rows:
+            result.append({
+                "id": int(row["id"]),
+                "saved_at": row["saved_at"],
+                "game": row["game"],
+                "draw_no": row["draw_no"],
+                "draw_date": row["draw_date"],
+                "bets": json.loads(row["bets"]),
+                "stake": row["stake"],
+                "won": row["won"],
+                "claim_by": row["claim_by"]
+            })
+        return result
 
     def delete_history(self, user_id: int, entry_id: int) -> bool:
-        raise NotImplementedError
+        with self._db() as db:
+            cur = db.execute(
+                "DELETE FROM history WHERE id = ? AND user_id = ?",
+                (entry_id, user_id),
+            )
+            return cur.rowcount == 1
 
     def delete_account(self, user_id: int) -> None:
-        raise NotImplementedError
+        with self._db() as db:
+            db.execute("DELETE FROM users WHERE id = ?", (user_id,))
 
     def purge(self) -> None:
-        raise NotImplementedError
+        now = self.clock()
+        today = datetime.fromtimestamp(now, timezone.utc).date().isoformat()
+
+        with self._db() as db:
+            # Delete history with purge_after < today
+            db.execute(
+                "DELETE FROM history WHERE purge_after < ?",
+                (today,),
+            )
+            # Delete login_tokens with expires_at < now OR used_at IS NOT NULL
+            db.execute(
+                "DELETE FROM login_tokens WHERE expires_at < ? OR used_at IS NOT NULL",
+                (now,),
+            )
+            # Delete sessions with expires_at < now
+            db.execute(
+                "DELETE FROM sessions WHERE expires_at < ?",
+                (now,),
+            )
 
 
 ACCOUNTS_MODULE_END = True
