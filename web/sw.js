@@ -8,9 +8,9 @@
    this worker keeps them in a cache named toto-shared (on the phone only, never
    sent anywhere) and redirects to /?shared=N. The page reads them back, deletes
    them at once and reads them like screenshots chosen from the gallery. */
-const VERSION = "toto-check-v20";
+const VERSION = "toto-check-v21";
 const SHARED = "toto-shared";            // screenshots shared into the app, held only until the page picks them up
-const SHELL = ["/", "/offline.html", "/manifest.webmanifest",
+const SHELL = ["/", "/offline.html", "/account.js", "/manifest.webmanifest",
                "/icons/icon-192.png", "/icons/icon-512.png", "/icons/maskable-512.png"];
 
 self.addEventListener("install", e => {

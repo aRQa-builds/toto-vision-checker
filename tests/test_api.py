@@ -223,6 +223,7 @@ def test_page_is_always_revalidated(client, monkeypatch, tmp_path):
     ("/manifest.webmanifest", "application/manifest+json"),
     ("/sw.js", "application/javascript"),
     ("/offline.html", "text/html"),
+    ("/account.js", "application/javascript"),
     ("/icons/icon-192.png", "image/png"),
     ("/icons/icon-512.png", "image/png"),
     ("/icons/maskable-512.png", "image/png"),
@@ -244,6 +245,12 @@ def test_service_worker_never_caches_the_api_and_is_revalidated(client):
     r = client.get("/sw.js")
     assert 'url.pathname.startsWith("/api/")) return;' in r.text
     assert r.headers["cache-control"] == "no-cache"
+
+
+def test_account_script_is_revalidated_and_precached(client):
+    r = client.get("/account.js")
+    assert r.headers["cache-control"] == "no-cache"
+    assert '"/account.js"' in client.get("/sw.js").text
 
 
 def test_icon_names_are_fixed_no_path_from_request(client):

@@ -187,7 +187,7 @@ def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) 
         resp.headers["X-Frame-Options"] = "DENY"
         if request.url.path.startswith("/api/"):
             resp.headers["Cache-Control"] = "no-store"
-        elif request.url.path in ("/", "/sw.js", "/manifest.webmanifest", "/offline.html"):
+        elif request.url.path in ("/", "/sw.js", "/manifest.webmanifest", "/offline.html", "/account.js"):
             resp.headers["Cache-Control"] = "no-cache"      # always revalidate, so page updates show on refresh
         return resp
 
@@ -476,6 +476,7 @@ def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) 
         "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json"),
         "/sw.js": ("sw.js", "application/javascript"),
         "/offline.html": ("offline.html", "text/html"),
+        "/account.js": ("account.js", "application/javascript"),
         "/icons/icon-192.png": ("icons/icon-192.png", "image/png"),
         "/icons/icon-512.png": ("icons/icon-512.png", "image/png"),
         "/icons/maskable-512.png": ("icons/maskable-512.png", "image/png"),
