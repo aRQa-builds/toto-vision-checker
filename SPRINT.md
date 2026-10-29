@@ -5,19 +5,19 @@ _Current work state. Updated every session close._
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
 - **Last session**: 2026-10-17
-- **Next session intent**: P2-05 results@zenqi.cc alias, then swap `TOTO_CONTACT` in `toolsun-ingest.cmd` back and send P2-06.
+- **Next session intent**: P2-05 results@zenqi.cc alias, then swap `TOTO_CONTACT` in `tools\run-ingest.cmd` back and send P2-06.
 
 ## Current Task
 P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-5552 and Toto 4227-4228 stored. Remaining: P2-05 alias, then switch `TOTO_CONTACT` to results@zenqi.cc.
 
 ## Task Queue (next 3)
 1. P2-05 set up results@zenqi.cc (M365 alias), then P2-06 send permission email (add schedule ask).
-2. P0-02 ticket photos (Toto, System, 4D Roll/iBet, multi-draw) + official-page screenshots.
-3. P3-01 Google Vision OCR, then P3-02 ticket parser.
+2. P0-02 ticket photos (System 7-11, Roll, 4D Roll/iBet, multi-draw): the photo parser was built on two real TOTO Ordinary tickets only; 4D photos untested.
+3. P4-03 Cloudflare Tunnel (going public), then P4-04 accounts. P5-01 stats once framing is decided.
 
 ## Blockers
 - None on the remote: public repo live (aRQa-builds/toto-vision-checker), 2026-10-25.
-- Ticket photos: needed for P3-02, P4-09 (draw no. on ticket?), P4-10.
+- Ticket photos: needed to harden P3-02 (4D, System 7-11, Roll layouts unseen), and for P4-09/P4-10.
 - Permission from Singapore Pools: gates P2-04 backfill, paid tier, ads, Play.
 
 ## Open Decisions
@@ -43,12 +43,12 @@ Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0). Hand lessons landed: 0 (no
 ### Blocked
 | Type | What |
 | --- | --- |
-| input | Ticket photos needed for P3-02, P4-09, P4-10. |
+| input | Real ticket photos to harden P3-02 (4D, System 7-11, Roll), P4-09, P4-10. |
 | decision | Singapore Pools permission gates P2-04 backfill, paid tier, ads, Play listing. |
 | input | P2-05 results@zenqi.cc alias (capture contact is ralph@arqas.io meanwhile). |
 
 ### Next
-Re-enter Sprint 1 at P3-01 Google Vision OCR, then P3-02 ticket parser (see Task Queue above).
+Re-enter at the Task Queue above. P3-01 Vision OCR and P3-02 ticket parser are already built and live (22 Oct 2026, `ocr.py`, `ticket_ocr.py`); this file was stale on that.
 
 ### Merged
 None.

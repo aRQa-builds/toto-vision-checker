@@ -3,7 +3,7 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 
 ## Identity
 - **What it is**: Free public SG Toto/4D ticket checker: scan ticket (Google Vision), match against draw, show payout.
-- **Stack**: Python 3.10+ stdlib core (`lottery_checker/`), pytest; web app later (Arcade Drum UI, PWA).
+- **Stack**: Python 3.10+ stdlib core (`lottery_checker/`), pytest; FastAPI web checker (`web/index.html` Arcade Drum UI, PWA) on Grayskull, live locally.
 - **Deploy**: toto.zenqi.cc (planned); capture runs on Grayskull (Win 11 64-bit, Task Scheduler).
 - **Home**: D:\SakuraHydra\HavenPalms\Toto_Vision_Checker (mirror: claude.ai project "Toto OCR Check").
 - **Remote**: https://github.com/aRQa-builds/toto-vision-checker (PUBLIC, `main`, since 2026-10-25). Ticket photos, captured Singapore Pools pages (`tests/fixtures/*.jpg`, `*.html`, `screens/`) and `data/` are git-ignored and stay local; never add them. Public repo: no secrets, no `.env`.
@@ -36,6 +36,8 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 ## Completed Milestones
 - Rules ref v0.2; cl. 5.16 table verified (0/178 mismatches).
 - M1 matcher + golden tests; P2-03 capture code + Windows scripts; live on Grayskull (six scheduled tasks, first captures verified 2026-10-21 to 2026-10-24; contact ralph@arqas.io until P2-05).
+- P3-01 Vision OCR (`ocr.py`) and P3-02 ticket photo parser (`ticket_ocr.py`) live since 22 Oct 2026; Vision key on Grayskull only. Built on two real TOTO Ordinary tickets; 4D, System 7-11, Roll layouts unseen (P0-02).
+- P4-02 web checker + P4-06 PWA + P3-07 shared results from screenshots (see docs/web-api.md). Not yet public: P4-03 tunnel, P4-04 accounts open.
 - Design canvas: Arcade Drum A, A2 Toto hand-off, A3 4D hand-off.
 
 Docs: docs/toto-4d-rules-reference.md, results-source-decision.md, ingest-schedule.md.

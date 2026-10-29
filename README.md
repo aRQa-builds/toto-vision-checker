@@ -17,7 +17,7 @@ Not affiliated with Singapore Pools. Official results published by Singapore Poo
 ```
 cd D:\SakuraHydra\HavenPalms\Toto_Vision_Checker
 py -3 -m pip install -r requirements.txt
-py -3 -m pytest -q                      # 418 passed (22 Oct 2026)
+py -3 -m pytest -q                      # 494 passed (25 Oct 2026)
 tools\run-web.cmd                       # web checker on http://127.0.0.1:8765, Ctrl+C to stop
 ```
 Try the TOTO and 4D example buttons: they use draws 4227 and 5551 from the capture.
@@ -69,7 +69,7 @@ Tools
 - Ticket text sent to the web checker is not stored or logged. Photos and screenshots go to Google Cloud Vision to be read and are not kept.
 
 ## Tests (`tests/`)
-418 tests (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
+494 tests (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
 
 ## Design rules
 - Rule versions are keyed by draw number, not date ("from Draw N"; the 2026 TOTO rules started mid-day).
