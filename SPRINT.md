@@ -5,7 +5,7 @@ _Current work state. Updated every session close._
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
 - **Last session**: 2026-10-29
-- **Next session intent**: P2-05 results@zenqi.cc alias, then swap `TOTO_CONTACT` in `tools\run-ingest.cmd` back and send P2-06.
+- **Next session intent**: longer owner sitting: Cloudflare Email (SPF/DKIM, token), Grayskull env vars and setup-web.ps1, P2-05 alias, swap TOTO_CONTACT, send P2-06. Testing phase renewed to 2026-11-05 14:40.
 
 ## Current Task
 P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-5552 and Toto 4227-4228 stored. Remaining: P2-05 alias, then switch `TOTO_CONTACT` to results@zenqi.cc.
