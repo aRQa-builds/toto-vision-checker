@@ -45,7 +45,7 @@ Windows 11 (Grayskull): use the two scripts in `tools\`.
 
 First-time setup on Grayskull:
 1. Install Python 3.10+ (python.org, tick "Add to PATH"; the `py` launcher is used if present).
-2. In the project folder: `py -3 -m pip install pytest` then `py -3 -m pytest -q` (expect 216 passed as of 21 Oct 2026).
+2. In the project folder: `py -3 -m pip install pytest` then `py -3 -m pytest -q` (expect 494 passed as of 25 Oct 2026).
 3. Make sure results@zenqi.cc exists and someone reads it (P2-05).
 4. `powershell -ExecutionPolicy Bypass -File tools\setup-schedule.ps1`
 5. Check `logs\ingest.log` after the next draw.

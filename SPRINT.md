@@ -3,12 +3,12 @@ _Current work state. Updated every session close._
 
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
-- **Phase**: Active build, capture ready to go live
+- **Phase**: Active build, capture live on Grayskull
 - **Last session**: 2026-10-17
-- **Next session intent**: Confirm results@zenqi.cc works, then go live on Grayskull and check the first log.
+- **Next session intent**: P2-05 results@zenqi.cc alias, then swap `TOTO_CONTACT` in `toolsun-ingest.cmd` back and send P2-06.
 
 ## Current Task
-P2-03 go-live: install Python on Grayskull, run tests (149), run `tools\setup-schedule.ps1`.
+P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-5552 and Toto 4227-4228 stored. Remaining: P2-05 alias, then switch `TOTO_CONTACT` to results@zenqi.cc.
 
 ## Task Queue (next 3)
 1. P2-05 set up results@zenqi.cc (M365 alias), then P2-06 send permission email (add schedule ask).
@@ -45,7 +45,7 @@ Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0). Hand lessons landed: 0 (no
 | --- | --- |
 | input | Ticket photos needed for P3-02, P4-09, P4-10. |
 | decision | Singapore Pools permission gates P2-04 backfill, paid tier, ads, Play listing. |
-| input | P2-03 go-live on Grayskull; P2-05 results@zenqi.cc alias. |
+| input | P2-05 results@zenqi.cc alias (capture contact is ralph@arqas.io meanwhile). |
 
 ### Next
 Re-enter Sprint 1 at P3-01 Google Vision OCR, then P3-02 ticket parser (see Task Queue above).
