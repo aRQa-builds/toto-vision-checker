@@ -86,3 +86,11 @@ Switch accounts on (owner steps above), then P2-05 alias, P0-02 ticket photos, P
 ### Discoveries
 - A login link opened in a tab already on the page changes only the hash, so nothing reloads; fixed with a `hashchange` listener.
 - The sign-in sheet stayed open after a successful link sign-in; fixed.
+
+## Session 2 addendum: P5-01 owner stats (2026-10-29)
+
+### Done
+- `lottery_checker/stats.py` (descriptive counts only, 30-draw floor, fixed "draws are independent" note) and owner-only `GET /api/owner/stats`, shown in a Statistics section of `web/owner.html`. Nothing added to the public page or API. 569 pytest tests green; browser smoke on a scratch data dir for both Toto and 4D.
+
+### Tally
+L1 1 (`stats.py`; Hand failed twice) · LEAD DIRECT 1 (route and owner.html wiring, small) · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lesson to land: check the type of each field in the test fixtures before iterating it (Hand iterated the int `additional` as a list).

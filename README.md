@@ -75,7 +75,7 @@ Tools
 - Ticket text sent to the web checker is not stored or logged. Photos and screenshots go to Google Cloud Vision to be read and are not kept.
 
 ## Tests (`tests/`)
-558 pytest tests plus 9 `node --test` tests for `web/account.js` (`node --test tests/web/account.test.cjs`) (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
+569 pytest tests plus 9 `node --test` tests for `web/account.js` (`node --test tests/web/account.test.cjs`) (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
 
 ## Design rules
 - Rule versions are keyed by draw number, not date ("from Draw N"; the 2026 TOTO rules started mid-day).

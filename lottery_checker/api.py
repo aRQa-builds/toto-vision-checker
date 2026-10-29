@@ -62,7 +62,7 @@ from .claim import claim_by
 from .ingest import ATTRIBUTION, official_url
 from .manual import EntryError, fourd_result, toto_result
 from .reveal import SHARED_ATTRIBUTION, build_reveal
-from . import diag, limits, owner, results_db, shared
+from . import diag, limits, owner, results_db, shared, stats
 from .store import load_ref
 from .ticket import DrawRef, TicketError
 from .ticket_entry import TicketDraft, parse_ticket
@@ -439,6 +439,12 @@ def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) 
         years = {str(y): results_db.coverage(yr) for y, yr in results_db.by_year(game, all_rows).items()}
         return {"game": game, "counts": counts, "query": {"draw_no": draw_no, "date": day}, "draws": rows,
                 "years": dict(sorted(years.items(), reverse=True))}
+
+    @app.get("/api/owner/stats")
+    def owner_stats(request: Request):
+        """P5-01 descriptive draw statistics (counts only), from captured draws. Owner only."""
+        owner_only(request)
+        return stats.all_stats(data_dir)
 
     @app.get("/api/owner/results.csv")
     def owner_results_csv(request: Request, game: str = "toto", year: Optional[int] = None):

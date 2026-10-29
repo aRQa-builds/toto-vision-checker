@@ -107,6 +107,7 @@ details p{margin:6px 0 0;font-size:12px;color:var(--muted);overflow-wrap:anywher
       <div class="chips" id="states"></div>
       <p class="small err" id="err" hidden></p>
       <div id="years"></div>
+      <details class="card" id="stats"><summary>Statistics (descriptive only)</summary><div id="statsBody"></div></details>
       <div class="list" id="list" aria-live="polite"></div>
       <div class="search">
         <button class="btn" id="csv" style="flex:1">Download all (CSV)</button>
@@ -152,7 +153,30 @@ async function load() {
     S.data = await r.json();
     $("locked").hidden = true; $("view").hidden = false;
     render();
+    loadStats();
   } catch (e) { $("err").textContent = e.message; $("err").hidden = false; }
+}
+
+async function loadStats() {
+  const body = $("statsBody"); body.replaceChildren();
+  try {
+    const r = await api("/api/owner/stats");
+    if (!r) return;
+    const all = await r.json(), s = S.game === "toto" ? all.toto : all["4d"];
+    body.append(el("p", "small", `${s.draws} captured ${s.draws === 1 ? "draw" : "draws"}. ${all.note}`));
+    if (!s.enough) body.append(el("p", "small", "Fewer than 30 draws on file: counts only, too few to say anything about the spread."));
+    const t = el("table");
+    const row = (cells, tag) => { const tr = el("tr"); for (const c of cells) tr.append(el(tag || "td", null, c == null ? "never" : String(c))); return tr; };
+    if (S.game === "toto") {
+      t.append(row(["No.", "Drawn", "Additional", "Expected", "Draws since"], "th"));
+      for (const n of s.numbers) t.append(row([n.number, n.drawn, n.additional, n.expected.toFixed(1), n.since]));
+    } else {
+      t.append(row(["Digit"].concat(s.first_digits.map((_, p) => "Pos " + (p + 1))), "th"));
+      for (let d = 0; d < 10; d++) t.append(row([d].concat(s.first_digits.map(p => p[d]))));
+      body.append(el("p", "small", `First prize, by position. Expected per digit: ${s.expected_per_digit.toFixed(1)}. Distinct numbers across all prizes: ${s.distinct_numbers}.`));
+    }
+    body.append(t);
+  } catch (e) { body.append(el("p", "small err", e.message)); }
 }
 
 function fmtMoney(v) { return v == null ? "pending" : "S$" + Number(v).toLocaleString("en-SG", {maximumFractionDigits: 0}); }

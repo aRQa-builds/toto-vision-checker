@@ -82,3 +82,19 @@ def test_year_csv_and_coverage(keyed):
     assert r.status_code == 200 and r.text.count("\n") == 127 and "5426,,missing" in r.text
     assert c.get("/api/owner/results.csv?game=4d&year=2019", headers=h).status_code == 404
     assert c.get("/api/owner/results.csv?game=4d&year=../x", headers=h).status_code == 422
+
+
+def test_stats_are_owner_only_and_descriptive(keyed):
+    c, k, _ = keyed
+    assert c.get("/api/owner/stats").status_code == 401
+    r = c.get("/api/owner/stats", headers={"X-Owner-Key": k})
+    assert r.status_code == 200
+    j = r.json()
+    assert j["toto"]["draws"] >= 1 and j["toto"]["enough"] is False
+    assert [n["number"] for n in j["toto"]["numbers"]] == list(range(1, 50))
+    assert "do not predict" in j["note"]
+
+
+def test_stats_off_without_a_key_file(data):  # noqa: F811
+    c = TestClient(api.create_app(data))
+    assert c.get("/api/owner/stats", headers={"X-Owner-Key": "x" * 64}).status_code == 404

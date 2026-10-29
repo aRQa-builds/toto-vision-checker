@@ -174,7 +174,7 @@ No pulling from singaporepools.com.sg for history (decision in
   `<game>-<year>.csv` (every draw number of the year, gaps `missing`), recompiled after
   every capture and screenshot. CLI: `py -3 -m lottery_checker.results_db [game]
   [--draw N] [--date YYYY-MM-DD]`.
-- Owner view `/owner` (and `/api/owner/results`, `/api/owner/results.csv?year=`): locked
+- Owner view `/owner` (and `/api/owner/results`, `/api/owner/results.csv?year=`, `/api/owner/stats` for P5-01 descriptive draw counts): locked
   by `data\owner.key`; `py -3 -m lottery_checker.owner` prints the Grayskull and phone
   links (key after `#`, never sent to the server). `--new` replaces the key.
 
