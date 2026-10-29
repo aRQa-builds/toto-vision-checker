@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -74,3 +76,15 @@ def photo_limits(data_dir: Path, per_hour: int, per_day: int) -> tuple[int, int]
     if tp and tp.active:
         return max(per_hour, TESTING_PER_HOUR), max(per_day, TESTING_PER_DAY)
     return per_hour, per_day
+
+
+class LinkLimiter:
+    def __init__(self, per_email: Optional[int] = None, per_ip: Optional[int] = None,
+                 per_day: Optional[int] = None, clock=None):
+        raise NotImplementedError
+
+    def allow(self, email: str, ip: str) -> bool:
+        raise NotImplementedError
+
+
+LIMITER_END = True
