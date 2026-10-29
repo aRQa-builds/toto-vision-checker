@@ -222,9 +222,30 @@ stays unreachable except through the tunnel.
    file too: a server started from older code answers /api/health but 404s routes added
    since (happened 22 Oct). After changing any .py file, run it again.
 
-Before going public: the privacy line on the page says ticket details are not
-stored, which is true today; P4-04 (accounts and history) must keep that
-promise or change the wording.
+The privacy line reads "Tickets are not stored unless you sign in and choose
+to save them." (P4-04, 29 Oct 2026). That stays true only while saving is an
+explicit button and the saved entry carries no serial, barcode, photo or ticket
+text.
+
+## Accounts and saved history (P4-04, 29 Oct 2026)
+Optional. Nothing about checking a ticket needs an account.
+
+| Route | What |
+|---|---|
+| `POST /api/auth/request` `{email}` | Emails a sign-in link (`<TOTO_PUBLIC_URL or https://toto.zenqi.cc>/#login=<token>`). The same reply for every valid-looking address; 429 past the mail limits; 503 if the mail could not be sent. |
+| `POST /api/auth/verify` `{token}` | Redeems the token once, sets the `toto_session` cookie (HttpOnly, SameSite=Lax, Secure over HTTPS, 30 days). |
+| `POST /api/auth/logout`, `GET /api/me` | End the session; who am I. |
+| `GET/POST /api/history`, `DELETE /api/history/{id}` | Saved entries for the signed-in user. |
+| `DELETE /api/account` | Deletes the user, sessions and all history. |
+
+Every POST and DELETE needs the header `X-Toto: 1` (CSRF guard). Audit lines on
+logger `toto.accounts` carry the user id only, never the address. History is
+purged at start and once a day.
+
+To switch on at Grayskull: onboard `zenqi.cc` for Cloudflare Email Sending
+(SPF/DKIM), create a token with "Email Sending: Edit", set
+`CLOUDFLARE_EMAIL_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` for the service, then
+re-run `tools\setup-web.ps1`. Without them sign-in mail fails with a 503.
 
 ## Known limits
 - Grayskull off, asleep or rebooting = site down.
