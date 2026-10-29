@@ -8,3 +8,4 @@ _Hand's knowledge base. Landed by Lead at close; Hand never writes its own lesso
 5. Take the user once per handler from the auth helper; do not look the session up again after a state change (it may be gone).
 6. Browser client: await `r.json()` before reading fields; route every request through one helper that checks `r.ok` and throws an Error carrying `.problems` and `.status`; wrap the transport call in try/catch and map failure to the friendly message; send the same headers and `credentials` on every request of a kind.
 7. Before calling a function that exists in the repo, read its argument order.
+8. Before iterating or indexing a record field, check its type in the test fixtures (for example Toto `additional` is a single int, not a list; 4D prizes are strings and lists of strings).
