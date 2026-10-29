@@ -81,10 +81,39 @@ def photo_limits(data_dir: Path, per_hour: int, per_day: int) -> tuple[int, int]
 class LinkLimiter:
     def __init__(self, per_email: Optional[int] = None, per_ip: Optional[int] = None,
                  per_day: Optional[int] = None, clock=None):
-        raise NotImplementedError
+        self.per_email = per_email if per_email is not None else int(os.environ.get("TOTO_LINK_PER_EMAIL", "3"))
+        self.per_ip = per_ip if per_ip is not None else int(os.environ.get("TOTO_LINK_PER_IP", "10"))
+        self.per_day = per_day if per_day is not None else int(os.environ.get("TOTO_LINK_PER_DAY", "200"))
+        self.clock = clock or time.time
+        self.emails: defaultdict[str, deque] = defaultdict(deque)
+        self.ips: defaultdict[str, deque] = defaultdict(deque)
+        self.site: deque = deque()
 
     def allow(self, email: str, ip: str) -> bool:
-        raise NotImplementedError
+        now = self.clock()
+        key_email = email.strip().lower()
+
+        # Clean old timestamps from email and ip deques (3600s window)
+        while self.emails[key_email] and now - self.emails[key_email][0] > 3600:
+            self.emails[key_email].popleft()
+        while self.ips[ip] and now - self.ips[ip][0] > 3600:
+            self.ips[ip].popleft()
+
+        # Clean old timestamps from site deque (86400s window)
+        while self.site and now - self.site[0] > 86400:
+            self.site.popleft()
+
+        # Check limits
+        if len(self.emails[key_email]) >= self.per_email or \
+           len(self.ips[ip]) >= self.per_ip or \
+           len(self.site) >= self.per_day:
+            return False
+
+        # Record success
+        self.emails[key_email].append(now)
+        self.ips[ip].append(now)
+        self.site.append(now)
+        return True
 
 
 LIMITER_END = True
