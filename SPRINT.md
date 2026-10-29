@@ -4,7 +4,7 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-10-17
+- **Last session**: 2026-10-29
 - **Next session intent**: P2-05 results@zenqi.cc alias, then swap `TOTO_CONTACT` in `tools\run-ingest.cmd` back and send P2-06.
 
 ## Current Task
@@ -58,3 +58,31 @@ None.
 
 ### Discoveries
 None.
+
+## Session 2 close (2026-10-29)
+
+### Done
+- P4-04 optional accounts with saved ticket history, built in 7 slices (plan: `docs/superpowers/plans/2026-10-29-p4-04-accounts.md`). Server: `accounts.py`, `limits.py`, `mailer.py`, `account_routes.py`. Browser: `web/account.js`, sign-in and history UI in `web/index.html`. 558 pytest + 9 node tests green; browser smoke on a scratch data dir (link sign-in in a fresh and an already-open tab, save, no double save, history list, delete account, no serial in the stored row).
+- Anonymous use unchanged; privacy line now "Tickets are not stored unless you sign in and choose to save them."
+- Nothing pushed to the remote (22+ commits ahead of origin/main).
+
+### Tally
+LOCAL 2 (limiter, mailer) · L1 5 (core, history, routes, account.js, UI; Hand failed the first four, the UI went to Fixer by design) · L2 0 · LEAD DIRECT 2 (static serving and service worker, docs) · SPEC FAULT 0 · RESOURCE FAULT 1 (preflight timeout while the GPU was held; not tallied). Hand lessons landed: 6.
+`Delegable: 6 of 8`. Reasons for zero: `index.html UI` `too-large` (85 KB, over the 80 KB cap); `static serving + sw bump` `needs-judgement` (two-line wiring, done direct).
+Escalation: `handoff-01..04.md` kept local (untracked; the repo is public).
+Process miss: slice 4 was launched on a BLOCKED preflight verdict because I piped preflight through grep and hid the exit code. It went green, so no harm, but the run was not a valid attempt by the rule. Disclosed at the time; preflight is now read by exit code.
+
+### Blocked
+| Type | What |
+| --- | --- |
+| owner | Onboard zenqi.cc for Cloudflare Email Sending (SPF/DKIM) and create a token with "Email Sending: Edit". |
+| owner | Set `CLOUDFLARE_EMAIL_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` for the Grayskull service, then re-run `tools\setup-web.ps1`. Until then sign-in returns 503 and nothing else changes. |
+| decision | Testing phase expired 2026-10-29 03:09 UTC: renew or end (`tools	esting-phase.ps1`). Untouched. |
+| decision | Push to the public remote. |
+
+### Next
+Switch accounts on (owner steps above), then P2-05 alias, P0-02 ticket photos, P5-01 stats framing.
+
+### Discoveries
+- A login link opened in a tab already on the page changes only the hash, so nothing reloads; fixed with a `hashchange` listener.
+- The sign-in sheet stayed open after a successful link sign-in; fixed.
