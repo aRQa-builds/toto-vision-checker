@@ -56,6 +56,12 @@ Web
 - `web/index.html`: the Arcade Drum page (one file). Ticket → Confirm → Unlock → Reveal.
 - `web/manifest.webmanifest`, `web/sw.js`, `web/offline.html`, `web/icons/`: installable app (P4-06). Add to a phone's home screen over HTTPS (the tunnel) or on Grayskull itself. The service worker never caches `/api/`; bump `VERSION` in `sw.js` when the page changes.
 
+Accounts (P4-04, optional: anonymous use is unchanged)
+- `accounts.py`: SQLite `dataccounts.db`. Magic-link sign-in (15 minute single-use token, 30 day session, both stored only as SHA-256 hashes) and saved history: game, draw, bets and outcome only, never serials, barcodes, photos or ticket text. Kept to 31 Dec of the year after it was saved; 500 entries a user; delete one entry or the whole account.
+- `limits.py`: sign-in mail limits (3 per email and 10 per connection an hour, 200 a day; `TOTO_LINK_PER_EMAIL`, `TOTO_LINK_PER_IP`, `TOTO_LINK_PER_DAY`).
+- `mailer.py`: sends the link through the Cloudflare Email Service from `login@zenqi.cc` (`TOTO_MAIL_FROM`; `CLOUDFLARE_EMAIL_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` in the environment). `TOTO_DEV_LINKS=1` logs the link instead when unconfigured (never the address).
+- `account_routes.py`: `/api/auth/*`, `/api/me`, `/api/history`, `/api/account`. `web/account.js` is the browser client.
+
 Tools
 - `tools/run-ingest.cmd`, `tools/setup-schedule.ps1`: capture.
 - `tools/run-web.cmd` (one-off, by hand), `tools/web-service.cmd` (keep-alive loop for the task), `tools/setup-web.ps1`: web checker.
@@ -69,7 +75,7 @@ Tools
 - Ticket text sent to the web checker is not stored or logged. Photos and screenshots go to Google Cloud Vision to be read and are not kept.
 
 ## Tests (`tests/`)
-494 tests (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
+558 pytest tests plus 9 `node --test` tests for `web/account.js` (`node --test tests/web/account.test.cjs`) (`tests/conftest.py` clears `GOOGLE_VISION_API_KEY`, so tests never make a real, billed Vision call). Highlights: two real ticket photos read by Vision (`test_ticket_ocr.py`, serials replaced); the full official 2026 cl. 5.16 System table (`golden_cl516.py`); parsers on real pages (TOTO 4068, 4D 5500); real phone screenshots of the official pages for draws 4227 and 5551 (`fixtures/screens/`); the 2026 special draws (`fixtures/special_draws_2026.json`); the API against draws the capture really stored.
 
 ## Design rules
 - Rule versions are keyed by draw number, not date ("from Draw N"; the 2026 TOTO rules started mid-day).
