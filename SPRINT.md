@@ -13,7 +13,7 @@ P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-
 ## Task Queue (next 3)
 1. P2-05 set up results@zenqi.cc (M365 alias), then P2-06 send permission email (add schedule ask).
 2. P0-02 ticket photos (System 7-11, Roll, 4D Roll/iBet, multi-draw): the photo parser was built on two real TOTO Ordinary tickets only; 4D photos untested.
-3. P4-03 Cloudflare Tunnel (going public), then P4-04 accounts. P5-01 stats once framing is decided.
+3. Testing phase on toto.zenqi.cc ends 2026-10-29 03:09 UTC: renew or close out (`tools	esting-phase.ps1`). Then P4-04 accounts; P5-01 stats once framing is decided.
 
 ## Blockers
 - None on the remote: public repo live (aRQa-builds/toto-vision-checker), 2026-10-25.
