@@ -366,6 +366,7 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
 <div class="sheet hidden" id="sheet"></div>
 <div class="sr" aria-live="polite" id="live"></div>
 
+<script src="/account.js"></script>
 <script>
 "use strict";
 // ---------------------------------------------------------------- tiny DOM helper (text only, never innerHTML)
@@ -575,19 +576,168 @@ function testingBanner(){
                : `Testing phase · higher photo limits until ${when}.`);
 }
 
+// ---------------------------------------------------------------- optional account (P4-04)
+// Everything here is optional: the checker works the same without signing in.
+const ACCT = window.TotoAccount ? window.TotoAccount.createAccountClient((u, o) => fetch(u, o)) : null;
+const A = {user: null, saving: false, progress: null, savedFor: null, msg: "", problems: []};
+const ACCT_NOTE = "Saved for the rest of this year and next. Serial numbers are never stored. You can delete it any time.";
+const acctProblems = e => (e && e.problems) || ["Something went wrong. Try again."];
+
+function openSheet(label, ...kids){
+  const sheet = document.getElementById("sheet");
+  sheet.replaceChildren(h("div", {role: "dialog", "aria-label": label}, ...kids));
+  sheet.classList.remove("hidden");
+}
+function closeSheet(){ document.getElementById("sheet").classList.add("hidden"); }
+
+function acctBar(){
+  if (!ACCT) return null;
+  if (!A.user) return h("button", {class: "chip", onclick: () => showSignIn()}, "Sign in");
+  return [h("span", {class: "small"}, A.user),
+    h("button", {class: "chip", onclick: showHistory}, "My history"),
+    h("button", {class: "chip", onclick: signOut}, "Sign out")];
+}
+
+async function signOut(){
+  try { await ACCT.logout(); } catch (e) {}
+  A.user = null; A.msg = ""; A.problems = []; closeSheet(); render(); say("Signed out.");
+}
+
+function showSignIn(note){
+  let email = "", busy = false;
+  const status = h("p", {class: "small", role: "status", style: "margin:0"}, note || "");
+  const errs = h("div", {});
+  const btn = h("button", {class: "btn go", onclick: async () => {
+    if (busy) return;
+    busy = true; btn.disabled = true; errs.replaceChildren(); status.textContent = "";
+    try { const r = await ACCT.requestLink(email.trim()); status.textContent = r.message; }
+    catch (e) { errs.replaceChildren(problemsBox(acctProblems(e))); }
+    busy = false; btn.disabled = false;
+  }}, "Email me a sign-in link");
+  openSheet("Sign in",
+    h("h1", {style: "font-size:19px"}, "Sign in"),
+    h("p", {class: "small", style: "margin:0"}, "The checker works without signing in. Sign in only if you want to keep a history of tickets you choose to save."),
+    h("input", {type: "email", autocomplete: "email", inputmode: "email", placeholder: "you@example.com",
+      "aria-label": "Email address", oninput: e => { email = e.target.value; }}),
+    errs, status, btn,
+    h("button", {class: "chip", style: "align-self:center", onclick: closeSheet}, "Close"));
+}
+
+function resultLabel(won){
+  return won === null || won === undefined ? "Pending" : won > 0 ? "Won " + money(won) : "Not won";
+}
+
+async function showHistory(){
+  const st = {entries: null, problems: [], confirm: false};
+  const draw = () => {
+    const list = st.entries === null ? h("p", {class: "small", style: "margin:0"}, "Loading…")
+      : !st.entries.length ? h("p", {class: "small", style: "margin:0"}, "Nothing saved yet. After a check, tap Save to my history.")
+      : h("div", {style: "display:flex;flex-direction:column;gap:8px;max-height:45vh;overflow:auto"}, st.entries.map(e =>
+          h("div", {class: "card small row"},
+            h("div", {}, h("b", {}, `${e.game === "4d" ? "4D" : "TOTO"} · Draw ${e.draw_no}`),
+              h("div", {}, `${fmtDate(e.draw_date)} · ${resultLabel(e.won)} · Stake ${money(e.stake)}`)),
+            h("button", {class: "chip", "aria-label": `Delete draw ${e.draw_no}`, onclick: async () => {
+              try { await ACCT.remove(e.id); st.entries = st.entries.filter(x => x.id !== e.id); st.problems = []; }
+              catch (err) { st.problems = acctProblems(err); }
+              draw();
+            }}, "Delete"))));
+    const wipe = st.confirm
+      ? h("div", {class: "card warn small", style: "display:flex;flex-direction:column;gap:8px"},
+          "This deletes your account and everything you saved. It cannot be undone.",
+          h("button", {class: "btn ghost", onclick: async () => {
+            try { await ACCT.deleteAccount(); A.user = null; A.msg = ""; closeSheet(); render(); say("Account deleted."); }
+            catch (err) { st.problems = acctProblems(err); st.confirm = false; draw(); }
+          }}, "Yes, delete everything"),
+          h("button", {class: "chip", style: "align-self:center", onclick: () => { st.confirm = false; draw(); }}, "Cancel"))
+      : h("button", {class: "chip", style: "align-self:center", onclick: () => { st.confirm = true; draw(); }},
+          "Delete my account and all saved data");
+    openSheet("My history", h("h1", {style: "font-size:19px"}, "My history"), problemsBox(st.problems), list, wipe,
+      h("button", {class: "chip", style: "align-self:center", onclick: closeSheet}, "Close"));
+  };
+  draw();
+  try { st.entries = await ACCT.history(); }
+  catch (e) { st.entries = []; st.problems = acctProblems(e); }
+  draw();
+}
+
+// One entry per draw: only the numbers you played, the stakes and the result. Nothing else leaves the page.
+function buildHistoryEntries(c){
+  const money2 = v => Math.round(Number(v) * 100) / 100;
+  return c.draws.map((d, di) => {
+    const rows = c.boards[di].rows;
+    const bets = rows.map((r, i) => ({
+      label: String(r.label).replace(/[^A-Za-z0-9 ]/g, " ").trim().slice(0, 40) || "Bet",
+      numbers: r.cells.map(x => String(x.t)).filter(n => /^\d{1,4}$/.test(n)).slice(0, 12),
+      stake: money2(c.ticket.entries[i].stake),
+    }));
+    const pending = rows.some(r => r.pending);
+    const won = pending ? null : money2(rows.reduce((s, r) => s + (r.won || 0), 0));
+    return {game: c.ticket.game, draw_no: d.draw_no, draw_date: d.date, bets,
+            stake: money2(bets.reduce((s, b) => s + b.stake, 0)), won,
+            claim_by: won === 0 ? null : d.claim_by};
+  });
+}
+
+async function saveToHistory(){
+  const c = S.check;
+  if (!ACCT || !A.user || !c || A.saving || A.savedFor === c) return;
+  A.saving = true; A.msg = ""; A.problems = []; refreshSaveCard();
+  try {
+    const entries = buildHistoryEntries(c);
+    if (!A.progress || A.progress.check !== c) A.progress = {check: c, n: 0};
+    while (A.progress.n < entries.length){ await ACCT.save(entries[A.progress.n]); A.progress.n++; }
+    A.savedFor = c; A.msg = "Saved to your history.";
+    say(A.msg);
+  } catch (e) { A.problems = acctProblems(e); }
+  A.saving = false; refreshSaveCard();
+}
+
+function saveCard(){
+  if (!ACCT || !A.user || !S.check) return null;
+  const done = A.savedFor === S.check;
+  return h("div", {class: "card small", id: "savecard", style: "display:flex;flex-direction:column;gap:8px"},
+    h("button", {class: "btn ghost", disabled: A.saving || done, onclick: saveToHistory},
+      A.saving ? "Saving…" : done ? "Saved" : "Save to my history"),
+    A.msg ? h("div", {role: "status", style: "color:var(--teal)"}, A.msg) : null,
+    problemsBox(A.problems),
+    h("div", {}, ACCT_NOTE));
+}
+function refreshSaveCard(){
+  const old = document.getElementById("savecard"), nu = saveCard();
+  if (old && nu) old.replaceWith(nu);
+}
+
+async function initAccount(){
+  if (!ACCT) return;
+  const token = window.TotoAccount.loginTokenFromHash(location.hash);
+  let failed = null;
+  if (token){
+    try { await ACCT.verify(token); } catch (e) { failed = acctProblems(e); }
+    history.replaceState(null, "", location.pathname + location.search);   // the token never stays in the URL or history
+  }
+  try { const m = await ACCT.me(); A.user = m && m.signed_in ? m.email : null; } catch (e) { A.user = null; }
+  render();
+  if (token && !failed && A.user) closeSheet();    // the sign-in sheet is done once the link works
+  if (failed) openSheet("Sign in", h("h1", {style: "font-size:19px"}, "Sign in"), problemsBox(failed),
+    h("button", {class: "btn go", onclick: () => showSignIn()}, "Email me a new link"),
+    h("button", {class: "chip", style: "align-self:center", onclick: closeSheet}, "Close"));
+}
+
 // ---------------------------------------------------------------- shell
 function render(){
   const app = document.getElementById("app");
   app.replaceChildren(...[
     h("div", {class: "top"},
       h("div", {class: "brand"}, h("i"), (S.ticket ? gameName() : "TOTO · 4D") + " CHECK"),
-      h("span", {class: "step"}, `STEP ${stepIndex() + 1}/4 · ${STEPS[stepIndex()].toUpperCase()}`)),
+      h("div", {style: "display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"},
+        acctBar(),
+        h("span", {class: "step"}, `STEP ${stepIndex() + 1}/4 · ${STEPS[stepIndex()].toUpperCase()}`))),
     h("div", {class: "steps", "aria-hidden": "true"}, STEPS.map((_, i) => h("span", {class: i <= stepIndex() ? "on" : ""}))),
     testingBanner(),
     queueBar(),
     ({ticket: viewTicket, review: viewReview, sealed: viewSealed, results: viewResults, reveal: viewReveal}[S.phase])(),
     h("footer", {}, "Not affiliated with Singapore Pools. Official results published by Singapore Pools are final. ",
-      "Please play responsibly. Ticket details are used for this check only and are not stored."),
+      "Please play responsibly. Tickets are not stored unless you sign in and choose to save them."),
   ].flat(Infinity).filter(Boolean));
   window.scrollTo({top: 0});
 }
@@ -1225,6 +1375,7 @@ function viewReveal(){
           h("button", {class: "chip", onclick: () => { S.phase = "review"; render(); }}, "Check the bets")) : null),
       h("div", {class: "card small"}, rv.attribution),
       tallyCard(),
+      saveCard(),
       S.queue && S.qi < S.queue.length - 1
         ? h("button", {class: "btn go", onclick: () => loadQueued(S.qi + 1)}, `Next ticket (${S.qi + 2} of ${S.queue.length})`)
         : h("button", {class: "btn go", onclick: () => { S.text = ""; restart(); }}, "Check another ticket"),
@@ -1350,6 +1501,8 @@ async function takeShared(){
   contribute(undefined, files);
 }
 takeShared();
+initAccount();
+window.addEventListener("hashchange", () => { if (location.hash.startsWith("#login=")) initAccount(); });   // link opened in a tab that is already on the page
 
 // P4-06: installable app. The service worker never caches /api/, so results are always fresh.
 if ("serviceWorker" in navigator){
