@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import json
 import re
 import secrets
 import sqlite3
 import time
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -60,6 +62,13 @@ def normalise_email(s: Optional[str]) -> Optional[str]:
     if len(s) > 254 or not _EMAIL_RE.match(s):
         return None
     return s
+
+
+HISTORY_LIMIT = 500
+
+
+def clean_entry(payload: dict) -> dict:
+    raise NotImplementedError
 
 
 class Accounts:
@@ -145,6 +154,21 @@ class Accounts:
             return
         with self._db() as db:
             db.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash(token),))
+
+    def save_history(self, user_id: int, payload: dict) -> int:
+        raise NotImplementedError
+
+    def list_history(self, user_id: int) -> list:
+        raise NotImplementedError
+
+    def delete_history(self, user_id: int, entry_id: int) -> bool:
+        raise NotImplementedError
+
+    def delete_account(self, user_id: int) -> None:
+        raise NotImplementedError
+
+    def purge(self) -> None:
+        raise NotImplementedError
 
 
 ACCOUNTS_MODULE_END = True
