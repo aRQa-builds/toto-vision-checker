@@ -123,7 +123,7 @@ class PhotoIn(BaseModel):
 
 # ---------------------------------------------------------------- app
 
-def create_app(data_dir: Optional[Path] = None, recognize=None) -> FastAPI:
+def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) -> FastAPI:
     data_dir = Path(data_dir or os.environ.get("TOTO_DATA", ROOT / "data"))
     app = FastAPI(title="ZenQi TOTO/4D checker", version=VERSION, docs_url=None, redoc_url=None)
     hits: dict[str, deque] = defaultdict(deque)
@@ -202,6 +202,9 @@ def create_app(data_dir: Optional[Path] = None, recognize=None) -> FastAPI:
         return {"ok": True, "version": VERSION, "photo_reading": vision_on(),
                 "auto_capture": os.environ.get("TOTO_AUTO_CAPTURE", "1").strip() != "0",
                 "testing": tp.view() if tp else None}
+
+    from .account_routes import add_account_routes
+    add_account_routes(app, data_dir, client_ip, send_link)
 
     @app.get("/api/samples/tickets")
     def sample_tickets(kind: str = "toto"):
