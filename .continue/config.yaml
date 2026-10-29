@@ -1,0 +1,193 @@
+name: local-tier
+version: 1.2.0
+schema: v1
+
+# Reconciled against CLAUDE.md role table 2026-07-30.
+# Loop roles are chat, edit, apply. Only hand-9b holds them — "one resident
+# local model by design". Any other model carrying a loop role is selectable
+# mid-attempt, and selecting it evicts hand's weights.
+#
+# ⚠ THIS REPO HAS NOT ACTUALLY RUN A HAND/CONTINUE DELEGATION.
+# Every task landed in this repo to date (see SPRINT.md) has been LEAD DIRECT,
+# reason-for-zero `no-catalog-entry` — no Doris entry yet exists for this
+# repo's task shapes. This file is present for Tier-1 config-sync parity with
+# the Coffee_Crew_HQ master (root CLAUDE.md: "Two copies of that file exist
+# and must move together"), not evidence that delegation has been exercised
+# here. Do not cite this file's presence as a delegation having occurred.
+
+models:
+  - name: hand-9b
+    provider: ollama
+    model: Qwen3.5-9B-Q6-lean:latest   # owner-set 2026-09-28: own Q6_K build from bf16, vision stripped. Was qwen3.5:9b Q4_K_M.
+    apiBase: http://localhost:11434
+    roles: [chat, edit, apply]
+    defaultCompletionOptions:
+      contextLength: 65536   # owner-set 2026-09-27 (s16); measured 100% GPU at depth. See note below.
+      temperature: 0.1
+
+  # SCOUT CONSOLIDATED ONTO HAND'S WEIGHTS 2026-07-30. Two swaps in one day:
+  #   scout-7b (qwen-scout, Qwen2 7.6B coder alias, ctx 16384)
+  #     -> scout-4b (qwen3.5:4b, ctx 65536)   trialled and REJECTED, same day
+  #     -> scout-9b (qwen3.5:9b, ctx 32768)   <-- SAME WEIGHTS AS hand-9b
+  #
+  # Why the 4b was dropped: 64k was its ONLY advantage and the data does not need
+  # it. The largest status=live chunk is 4,620 tok (14% of 32768) and the median
+  # is 3,320 B, so context was never the constraint. Against that, a second model
+  # costs a swap on every crossing. MEASURED 2026-07-30: same model at the SAME
+  # num_ctx returns warm in 299 ms; crossing num_ctx forces a FULL reload —
+  # 5,773 ms out, 5,741 ms back, ~19x. /api/ps never holds two entries, so a
+  # mismatch is a THRASH, not extra VRAM.
+  #
+  # ⚠ contextLength HERE MUST EQUAL hand-9b's. They are ONE resident model;
+  # diverging the two numbers silently reintroduces the swap this removes.
+  # temperature may differ freely — sampling does not reallocate.
+  #
+  # The ROLE stays a separate entry deliberately: replacing Scout with a better
+  # model later is then a one-line change, and the measurement history stays
+  # attached to the role rather than to the weights.
+  - name: scout-9b
+    provider: ollama
+    model: Qwen3.5-9B-Q6-lean:latest   # deliberately identical to hand-9b — no swap
+    apiBase: http://localhost:11434
+    roles: [summarize]      # chat removed 2026-07-22: chat is a loop role.
+    defaultCompletionOptions:
+      contextLength: 65536   # MUST match hand-9b. See note above.
+      temperature: 0.2
+
+  # deepseek-16b (deepseek-coder-v2:16b, ~9GB) removed 2026-07-21: it carried
+  # loop roles [chat, edit] as a SECOND 9GB model. CLAUDE.md "one resident local
+  # model by design" — any loop role on a second 9GB model buys a swap mid-loop
+  # that evicts hand's weights. Chat/Edit/Apply stay hand-only.
+  # Its scoped home is LM Studio, on demand, outside the editor surface.
+  # Output feeds specs, never commits.
+
+  # scribe (gemma4:e4b) removed from this config 2026-07-22: it held [chat],
+  # a loop role, while CLAUDE.md lists it as not role-bearing in the loop.
+  # Commit messages and prose are not attempt-loop work. If it earns a place
+  # back, it belongs in the global config, not the per-project one.
+
+  - name: autocomplete
+    provider: ollama
+    model: Qwen2.5-Coder-1.5B-base-8k:latest   # num_ctx 8192 baked into its Modelfile, 2026-09-28 (1.36 GB resident vs 2.02 GB at the 32768 default)
+    apiBase: http://localhost:11434
+    roles: [autocomplete]
+    defaultCompletionOptions:
+      contextLength: 8192
+
+  - name: embedder
+    provider: ollama
+    model: nomic-embed-text   # GPU on purpose (owner 2026-09-28): the CPU build blocked Hand loads during @codebase bulk re-index. rig-index + coffee_crew_mcp use nomic-embed-text-cpu (single queries).
+    apiBase: http://localhost:11434
+    embedOptions:
+      maxChunkSize: 512
+      maxBatchSize: 64
+    roles: [embed]
+
+context:
+  - provider: file
+  - provider: code
+  - provider: diff
+  - provider: terminal
+  - provider: codebase
+
+# ============================================================================
+# HAND IS NOW hand-9b — SWAPPED 2026-07-30 (owner-chosen).
+#
+#   was:  hand-14b  -> ollama `qwen-hand`  (Qwen2.5-coder-14B, 9.0 GB, ctx 8192)
+#   now:  hand-9b   -> ollama `qwen3.5:9b` (Qwen3.5 9.7B Q4_K_M, 6.6 GB, ctx 32768; 65536 since 2026-09-27)
+#
+# ⛔ hand-14b IS RETIRED AS A ROLE — owner-landed 2026-08-01. It is NOT the rollback
+# target. The condition that kept it ("until hand-9b has scored LOCAL solves") was
+# DISCHARGED the same day: M-1.1e and M-1.1f both went green on a Hand-9B attempt.
+#
+# ⚠ RETIRED IS A ROLE DECISION, NOT A DISK FACT — do not conflate them.
+# The ad-hoc `qwen-hand` alias went 2026-08-01 but freed no disk (unlinking a manifest
+# does not reclaim shared blobs). THE WEIGHTS WERE REMOVED 2026-09-25: `ollama rm
+# qwen2.5-coder:14b` (8.99 GB, digest 9ec8897f747e246e), owner-approved decom sweep,
+# verified absent from `ollama list`. It is now OFF DISK — no rollback target exists.
+#
+# ⚠ This block said the opposite ("deliberately still on disk … the rollback target")
+# until 2026-08-01 (s25) — a retired fact surviving in a file that repeats it, the
+# third instance of that shape. See SPRINT s25 #13.
+#
+# The `qwen-hand` alias indirection is dropped: it was an untracked ad-hoc
+# `ollama create` with no Modelfile in git, so it obscured which weights were
+# live without buying anything. This points at the published tag directly.
+# ============================================================================
+#
+# ⛔ EVERY hand-14b num_ctx NUMBER IS VOID FOR THIS MODEL — NOT JUST CAUTIOUS.
+# The retired ladder (4096 / 8192 live / 10240 near-miss / 12288 rejected at 7.9%
+# spill / 16384 rejected) and its ~772 MiB-per-4096 rate were Qwen2-14B geometry:
+# 48 layers x 8 kv-heads x 128 dim. hand-9b is 32 blocks with key_length and
+# value_length 256. Do not cite the old ladder for this model in either direction,
+# and do not "translate" it — it was re-measured from scratch.
+#
+# THE MEASUREMENT (2026-07-30, via /api/ps with the model resident, think:false):
+#   num_ctx   8192:  size = size_vram = 5,880,141,577  -> 100% GPU
+#   num_ctx  16384:  size = size_vram = 6,165,354,249  -> 100% GPU
+#   num_ctx  32768:  size = size_vram = 6,735,779,593  -> 100% GPU
+#   num_ctx  49152:  size = size_vram = 7,306,204,937  -> 100% GPU
+#   num_ctx  65536:  size = size_vram = 7,717,236,243  -> 100% GPU   <-- LIVE since 2026-09-27
+#   num_ctx  98304:  size = size_vram = 8,824,532,499  -> 100% GPU
+#   num_ctx 131072:  size = size_vram = 9,931,828,755  -> 100% GPU
+#
+#   KV cost 34,816 B/token, LINEAR 8192 -> 49152. Then it CHANGES: 49152 -> 65536
+#   costs only 25,088 B/token. The rate broke inside the measured range, exactly as
+#   the 14B rate did. Measure, never interpolate. This is not a stylistic warning.
+#
+# WHY 32768 AND NOT 65536 (2026-07-30) — SUPERSEDED 2026-09-27, see the note below.
+# Every value above runs 100% GPU *in isolation*. Isolation is not the constraint.
+# The constraint is WHOLE-GPU free memory with autocomplete + the embedder resident,
+# on a 12288 MiB RTX 3060 whose desktop (browsers, Teams, Parsec, VS Code) holds
+# ~2.5 GB and FLUCTUATES:
+#   at 32768 co-resident:  ollama 7910 MiB total ->  1688 MiB whole-GPU free
+#   at 65536 co-resident:  ollama 8966 MiB total ->   666 MiB whole-GPU free
+# 65536 fits and is rejected ON MARGIN, not on a spill — the same reasoning that
+# rejected 10240 for the 14B. Read `nvidia-smi`, not just /api/ps, before raising
+# this: LM Studio holding one idle model silently takes ~9 GB and every reading
+# above becomes fiction.
+#
+# ⛔ SUPERSEDED 2026-09-27 (owner, HQ SPRINT Session 16) — LIVE VALUE IS NOW 65536.
+# Re-measured on Ollama 0.34.0, Q4_K_M digest 6488c96fa5fa:
+#   at 65536 co-resident:  hand 7,566,262,270 B = size_vram, 100% GPU ->  92 MiB whole-GPU free
+#   at 49152 co-resident:  hand 7,155,230,964 B = size_vram, 100% GPU -> 289 MiB whole-GPU free
+#   at 32768 co-resident:  hand 6,584,805,620 B = size_vram, 100% GPU -> 816 MiB whole-GPU free
+# 597 residency samples across a 50-90 KB whole-file ladder AT DEPTH (up to 50,296 tok,
+# 76.7% of 65536): zero spills, 6/7 rungs byte-exact, 1 blank-line drift, ~41 tok/s flat.
+# The margin rule above predates CLAUDE.md's WDDM finding (the desktop yields on demand, so
+# free memory never decides fit). The owner accepted the thin margin on that evidence.
+# The table above is the 0.32.5 record, kept as history — its figures are not current.
+#
+# ⚠ MULTIPLE COPIES OF THIS FILE EXIST AND HAVE DRIFTED BEFORE.
+#   master:        d:/SakuraHydra/Coffee_Crew_HQ/.continue/config.yaml
+#                  (Tier-1 MIRROR source since 2026-08-10, D-9 — not the bare
+#                  umbrella root; see root CLAUDE.md's Catalogs section)
+#   repo copy:     aRQa_Solutions/aRQa_Engineer_Handbook/.continue/config.yaml
+#   repo copy:     ZenQi_Systems/ZenQi_Load_Spices/.continue/config.yaml
+#                  (added 2026-09-13, Session 14 — mirrored from Coffee_Crew_HQ;
+#                  this repo does no actual Hand/Continue delegation yet, see
+#                  the note at the top of this file)
+#   repo copy:     ZenQi_Systems/ZenQi_The_Pulse/.continue/config.yaml (and the
+#                  other umbrella repos' copies — same file, mirrored from here)
+#   No copy marks itself "THIS FILE": a mirror is byte-identical to master, so a
+#   self-marker would be wrong in every copy but one (fixed 2026-10-06).
+#
+# ⚠⚠ THE TIER-1 HASH CHECK IN /open AND /close COMPARES EACH COPY TO THE MASTER.
+# A DIFF against Coffee_Crew_HQ is real drift — resolve it by mirroring from here,
+# not by copying one repo's copy over another's. What must stay reconciled is the
+# MODEL CONFIG, not just the bytes. Verify that too:
+#   one holder of [chat, edit, apply] · hand.model == scout.model · hand.ctx == scout.ctx
+# This copy is checked for DIFF against Coffee_Crew_HQ specifically (the master) —
+# a DIFF there is real drift and should be resolved; a DIFF against a *different*
+# repo's copy is expected and not actionable.
+#
+# ⚠ think:false IS MANDATORY AND THIS FILE CANNOT EXPRESS IT.
+# qwen3.5:9b advertises `thinking`. With thinking ON, a measured 30-line route edit
+# returned the file BYTE-IDENTICAL to the input — a silent no-op that compiles green
+# — while burning 5468 output tokens against 298 with thinking off. Continue's
+# defaultCompletionOptions has no `think` key, so any caller driving hand-9b through
+# the Ollama API must pass "think": false explicitly. A call that omits it is not a
+# valid attempt and its result must not be tallied.
+#
+# If num_ctx changes again, or Apply is repointed, re-run the readings above before
+# any delegation is counted.
