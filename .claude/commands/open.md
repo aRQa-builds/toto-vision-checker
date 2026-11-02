@@ -77,7 +77,8 @@ Using the local context emitted by `scout-open.mjs` above:
      user. No auto-landing.
 
 3. **Render Scoped Roadmap (Macro View):**
-   Display the high-level status matrix parsed from `PROJECT_BRAIN.md`:
+   Display the high-level status matrix parsed from `PROJECT_BRAIN.md`
+   (in `Coffee_Crew_HQ`, which has none by design, use `SPRINT.md`; `roadmap-report.mjs` refuses there, RR-01):
 
    | Module / AD | Initial Scope Objective | Current Status | Key Blocker / Milestone |
    | :--- | :--- | :--- | :--- |
