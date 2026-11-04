@@ -48,6 +48,8 @@ _TOTO_HEAD = re.compile(r"\b(ORDINARY|SYSTEM\s*ROLL|SYSTEM\s*(\d{1,2}))\b", re.I
 _LETTER_NUM = re.compile(r"^([A-J])[.,]\s*(\d{1,2})$", re.I)    # "B.04" stuck together
 _LETTER = re.compile(r"^([A-J])[.,]$", re.I)                    # "A."
 _NUM = re.compile(r"^\d{1,2}$")
+# purchase time ("01:42") or a dashed serial ("000-0000000-0000000"): the ticket footer
+_FOOTER = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{3,7}-\d{1,7}-\d{3,7}\b")
 LOW_CONFIDENCE = 0.80
 
 # Vision sometimes reads a printed zero as the letter O (or one as I/l), above all
@@ -145,6 +147,14 @@ def read_rows(rows: Sequence[str]) -> PhotoRead:
     if re.search(r"\bTOTO\b", joined):
         text = _toto_text(rows, notes)
     elif re.search(r"\b4D\b|\bBIG\b|\bSML\b", joined):
+        # 4D branch: stop at the first footer match
+        cut_i = None
+        for i, row in enumerate(rows):
+            if _FOOTER.search(row):
+                cut_i = i
+                break
+        if cut_i is not None:
+            rows = rows[:cut_i]
         text = "4D\n" + "\n".join(rows)
         notes.append("4D photo reading is new: check every number and stake.")
     else:
@@ -175,7 +185,12 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
             if "ROLL" in word:
                 kind, size = "SYSTEM ROLL", 5
             elif m.group(2):
-                kind, size = f"SYSTEM {int(m.group(2))}", int(m.group(2))
+                n = int(m.group(2))
+                if 7 <= n <= 12:
+                    kind, size = f"SYSTEM {n}", n
+                else:
+                    kind, size = None, None
+                    notes.append(f"Bet type read as SYSTEM {n}, which doesn't exist; the bet type was taken from the count of numbers.")
             break
     price_i = next((i for i, r in enumerate(rows) if _PRICE.search(r)), None)
     draw_i = next((i for i, r in enumerate(rows) if _DRAW.search(r)), None)
@@ -215,11 +230,15 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
                 cur.append(f"{int(tok):02d}")
     close()
 
-    out = ["TOTO", kind]
+    out = ["TOTO"] + ([kind] if kind else [])
     used = {b[0] for b in boards if b[0]}
     spare = iter(c for c in "ABCDEFGHIJ" if c not in used)
     for letter, nums, qp in boards:
-        out.append(f"{letter or next(spare)}. {' '.join(nums)}{' QP' if qp else ''}")
+        ltr = letter or next(spare, None)
+        if ltr is not None:
+            out.append(f"{ltr}. {' '.join(nums)}{' QP' if qp else ''}")
+        else:
+            out.append(f"{' '.join(nums)}{' QP' if qp else ''}")
     if any(b[0] is None for b in boards):
         notes.append("A board letter was missing on the photo; letters were filled in.")
 
@@ -235,4 +254,6 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
     if price_i is not None:
         p = _PRICE.search(rows[price_i]).group(1)
         out.append(f"PRICE: ${p}")
+    if len(boards) > 10:
+        notes.append("More than 10 boards were read; check the photo.")
     return "\n".join(out)
