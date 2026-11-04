@@ -102,14 +102,17 @@ $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) 
   -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) `
   -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
-# Re-running: stop the old task and any server it left behind before registering again.
-if (Get-Task) { Stop-ScheduledTask -TaskPath $Folder -TaskName $Name -ErrorAction SilentlyContinue }
-Stop-Server                       # also ends a copy started by hand with run-web.cmd
-Start-Sleep -Seconds 1
-
+# Register FIRST. A task registered from an elevated window (-AtStartup) cannot be replaced from a
+# non-elevated one ("access denied"). If that happens the script stops here with the old server
+# still running; stopping first took the site down (502) for about 2 minutes on 5 Nov 2026.
 Register-ScheduledTask -TaskPath $Folder -TaskName $Name -Action $action -Trigger $trigger -Principal $principal `
   -Settings $settings -Force `
   -Description 'TOTO/4D web checker on http://127.0.0.1:8765 (see docs\web-api.md). Ticket text is not logged.' | Out-Null
+
+# Registered: now stop the old task and any server it left behind, then start fresh.
+Stop-ScheduledTask -TaskPath $Folder -TaskName $Name -ErrorAction SilentlyContinue
+Stop-Server                       # also ends a copy started by hand with run-web.cmd
+Start-Sleep -Seconds 1
 
 Start-ScheduledTask -TaskPath $Folder -TaskName $Name
 $h = $null
