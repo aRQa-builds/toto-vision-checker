@@ -4,7 +4,7 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-11-05 (session 3)
+- **Last session**: 2026-11-05 (session 4)
 - **Next session intent**: longer owner sitting: Cloudflare Email (SPF/DKIM, token), Grayskull env vars and setup-web.ps1, P2-05 alias, swap TOTO_CONTACT, send P2-06. Testing phase runs to 2026-11-09 23:57 UTC (renewed twice; the earlier 2026-11-05 date here was stale).
 
 ## Current Task
@@ -132,3 +132,44 @@ Parser hardening live on toto.zenqi.cc, 2026-11-05 00:16 (service restart).
 - `SCOPE`: make `setup-web.ps1` check it can register before it stops anything, or skip re-registering when the task exists.
 
 2026-11-05 | delegable: 1 of 1 | reasons: none | LOCAL: 1 · L1: 0 · L2: 0 (uncatalogued: 1) | lessons landed: 1
+
+## Session 4 close (2026-11-05)
+
+### Done
+- `tools\setup-web.ps1`: registers the task before stopping the server (`676b6b4`). Parse-checked only, not run live.
+- P3-02-R1 row grouping uses the row mean (`abb0338`): a tall watermark word no longer splits a board row. Hand, attempt 2, `uncatalogued`.
+- P3-02-R2 parser fixes from six real photos (`c09e91b`): slash read as a digit in a draw number, glued day name, TOTO found from a `SYSTEM n` header, 4D header noise, glued PRICE row, orphan digit on a board. Hand failed twice (`handoff-06`, `handoff-07`; first run was a spec/fixture fault, re-planned in `0b804ed`), Fixer fixed forward from `handoff-07`. `uncatalogued`.
+- P3-02-S System 8-11 guard tests from synthetic A04-shaped rows (`3288c0c`, `specs/p3-02-sys811.md`). All green on arrival, so nothing for Hand. P0-02 now has System 7 (a04), Roll (a03), iBet (a06), 10-line Ordinary (a05), two-draw TOTO (a02). System 8-11 real photos will not exist; no scraping.
+- Gate: `py -3 -m pytest tests/test_ticket_ocr.py -q` 42 passed.
+
+### Tally
+LOCAL 1 (R1) · L1 1 (R2) · L2 0 · LEAD DIRECT 2 (`setup-web.ps1`, System 8-11 tests; both `no-runner`) · SPEC FAULT 1 (R2 first run) · RESOURCE FAULT 0. Hand lessons landed: 2 (repo tier 10, 11; 10 repeats generic HL-175).
+`Delegable: 2 of 4`. Reasons for zero: `setup-web.ps1` `no-runner`; System 8-11 tests `no-runner` (gate already green).
+Escalation: LOCAL 1 · L1 1 · L2 0 (uncatalogued 2).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Switch accounts on: Cloudflare Email Sending for zenqi.cc (SPF/DKIM), token with "Email Sending: Edit", set both env vars on Grayskull. |
+| input | P2-05 results@zenqi.cc alias, then P2-06 permission email. |
+| decision | Push to the public remote (about 30 commits ahead). |
+| decision | Singapore Pools permission (gates P2-04 backfill, paid tier, ads, Play, publishing stats). |
+| input | 5 Grace refresh proposals AWAITING OWNER. |
+
+### Next
+1. Restart the live web checker onto the new parser (end the python process or `Start-ScheduledTask`; not `setup-web.ps1` from a non-elevated window).
+2. Owner steps above, accounts switch-on first.
+3. Verify `setup-web.ps1` live from an elevated window.
+
+### Merged
+None.
+
+### Deployed
+Nothing. Parser changes are committed but the live checker still runs the old code.
+
+### Discoveries
+- `SCOPE`: tracked `tests/fixtures/ocr/*.vision.txt` hold real serials in a public repo; scrub before pushing.
+- `SCOPE`: `ocr.py` leaves an unused `row_words` variable from Hand's R1 attempt.
+- `MISS` (process): none. Handoffs 05-07 stay local and untracked.
+
+2026-11-05 | delegable: 2 of 4 | reasons: no-runner x2 | LOCAL: 1 · L1: 1 · L2: 0 (uncatalogued: 2) | lessons landed: 2

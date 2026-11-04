@@ -10,3 +10,5 @@ _Hand's knowledge base. Landed by Lead at close; Hand never writes its own lesso
 7. Before calling a function that exists in the repo, read its argument order.
 8. Before iterating or indexing a record field, check its type in the test fixtures (for example Toto `additional` is a single int, not a list; 4D prizes are strings and lists of strings).
 9. Put each addition exactly where the spec places it (a note after the loop, not after the return) and keep every comment line the spec gives; the gate cannot see either.
+10. When a spec lists lettered or numbered sub-sections of behaviour (3a, 3b, 3c, 3d), implement every one; two identical attempts stopped after the first sub-sections, and the gate then failed on exactly the omitted ones. Before replying, tick each sub-section against your diff. (Repeat of generic HL-175.)
+11. Do not leave behind a variable or helper you no longer use after changing the logic that read it.
