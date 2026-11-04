@@ -297,7 +297,8 @@ def test_glued_watermark_letters_and_spaced_dates():
 # Row output of Google Vision on real tickets (a02, a03, a04, a05, a06). Serial, terminal and
 # barcode numbers are dummies; everything else is exactly what Vision returned.
 
-A02 = """F No more cheques from 1 Nov 2026 POOL
+A02 = """SINGAPO TOTO
+F No more cheques from 1 Nov 2026 POOL
 Link NRIC to PayNow for payouts
 POO ORDINARY SINGAP
 A. 12 13 14 16 26 39 QP
@@ -383,6 +384,10 @@ def test_slash_read_as_a_digit_in_a_draw_number_is_put_back():
     assert clean_row("MON 14/09/26 4217726") == "MON 14/09/26 4217/26"
     assert clean_row("THU 29/10/26 4230126 0000000000") == "THU 29/10/26 4230/26 0000000000"
     assert clean_row("THU 10/09/26 4216/26") == "THU 10/09/26 4216/26"
+    assert clean_row("SINGMON 26/10/26 4229/26") == "MON 26/10/26 4229/26"
+    assert clean_row("MON 14/09/26 4217/26") == "MON 14/09/26 4217/26"
+    assert clean_row("SINGMON 26/10/26 4229/26") == "MON 26/10/26 4229/26"
+    assert clean_row("MON 14/09/26 4217/26") == "MON 14/09/26 4217/26"
     assert clean_row("23/09/26 01:51 PM 177302004") == "23/09/26 01:51 PM 177302004"
 
 

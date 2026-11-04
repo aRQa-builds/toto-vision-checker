@@ -5,7 +5,7 @@ Reply with the complete file `lottery_checker/ticket_ocr.py`, line 1 to the last
 
 ## 1 - Scope
 Edit only `lottery_checker/ticket_ocr.py`, and inside it only:
-- add one module constant `_DRAW_SLASH` and use it in `clean_row`;
+- add two module constants, `_DRAW_SLASH` and `_GLUED_DAY`, and use them in `clean_row`;
 - the `if re.search(r"\bTOTO\b", joined):` test in `read_rows`;
 - the 4D branch of `read_rows`;
 - the token loop in `_toto_text`.
@@ -24,6 +24,13 @@ _DRAW_SLASH = re.compile(r"(\d{2}/\d{2}/(\d{2})\s+\d{4})[71lI|](?=\2\b)")
 ```
 In `clean_row`, apply it once to the whole row, directly after the `_SPACED_DATE.sub(...)` line: `row = _DRAW_SLASH.sub(r"\1/", row)`. A row without a date before a 7-digit run is not changed.
 
+The watermark also glues letters onto the day name (`SINGMON 26/10/26 4229/26`), and then `_DRAW` cannot match the row. Add a second constant next to `_DRAW_SLASH`:
+```python
+# watermark letters glued onto a day name: "SINGMON 26/10/26" -> "MON 26/10/26"
+_GLUED_DAY = re.compile(r"\b[A-Za-z]+?(MON|TUE|WED|THU|FRI|SAT|SUN)(?=\s+\d{2}/\d{2}/\d{2}\b)", re.I)
+```
+and apply it in `clean_row` on the line directly after the `_DRAW_SLASH` line: `row = _GLUED_DAY.sub(r"\1", row)`. A day name with nothing glued to it does not match (the `+?` needs at least one letter), so `MON 14/09/26` is unchanged.
+
 ### 3b. TOTO title lost (`read_rows`)
 Today a photo is TOTO only if `\bTOTO\b` appears. Vision read the title as `STO` and `TOTOLS`. Change the test to also accept `\bSYSTEM\s*\d` (a bet-type header only TOTO prints): `re.search(r"\bTOTO\b|\bSYSTEM\s*\d", joined)`. The 4D branch and the "Couldn't tell" branch keep their tests and order.
 
@@ -31,7 +38,7 @@ Today a photo is TOTO only if `\bTOTO\b` appears. Vision read the title as `STO`
 After the footer cut, and before `text = "4D\n" + ...`, make three changes to `rows`:
 1. If some row matches `\b(?:ORDINARY|IBET|ROLL|SYSTEM)\b` (case-insensitive), the first such row is the bet-type row: drop every row before it. If none matches, drop nothing.
 2. Drop every row that, after `.strip()`, is only 1 to 3 digits.
-3. In a row that matches `PRICE\b` and contains `\$\s*(\d+\.\d{2})`, replace the whole row with `PRICE : $ <that amount>` (this puts back a price row the watermark glued letters onto, `SINPRICE POBE : $ 9.00`).
+3. In a row that matches `PRICE\b` and contains `\$\s*(\d+\.\d{2})`, replace the whole row with exactly `PRICE: $<that amount>` (no space after the colon or the dollar sign, the shape `_toto_text` writes, so `PRICE: $9.00`; this puts back a price row the watermark glued letters onto, `SINPRICE POBE : $ 9.00`).
 Then `text = "4D\n" + "\n".join(rows)` as today, and the note line stays.
 
 ### 3d. Orphan digit on a board row (`_toto_text`)
