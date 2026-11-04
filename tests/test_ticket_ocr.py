@@ -165,6 +165,52 @@ def test_4d_passes_through_with_a_caution():
     assert r.draft.game == "4d" and r.draft.ready and any("4D" in n for n in r.notes)
 
 
+# ---------------------------------------------------------------- hardening (P3-02-H)
+
+_DRAW_ROWS = ["DRAW:", "THU 22/10/26 4228/26"]
+
+
+def test_impossible_system_size_takes_the_type_from_the_count():
+    # "SYSTEM 11" with a digit lost: must not split 11 numbers into 11 boards
+    r = read_rows(["TOTO", "SYSTEM 1", "A. 01 02 03 04 05 06 07 08 09 10 11"] + _DRAW_ROWS)
+    assert r.draft.ready and [(e.kind, len(e.numbers)) for e in r.draft.entries] == [("system", 11)]
+    assert any("SYSTEM 1" in n for n in r.notes)
+    assert "\nSYSTEM 1\n" not in r.text
+
+
+def test_system_size_outside_7_to_12_is_not_trusted():
+    for head in ("SYSTEM 0", "SYSTEM 3", "SYSTEM 13"):
+        r = read_rows(["TOTO", head, "A. 01 02 03 04 05 06 07"] + _DRAW_ROWS)
+        assert r.draft.ready and [(e.kind, len(e.numbers)) for e in r.draft.entries] == [("system", 7)], head
+        assert any(head in n for n in r.notes), head
+
+
+def test_valid_system_sizes_still_split_boards():
+    r = read_rows(["TOTO", "SYSTEM 12", "A. 01 02 03 04 05 06 07 08 09 10 11 12"] + _DRAW_ROWS)
+    assert r.draft.ready and [len(e.numbers) for e in r.draft.entries] == [12] and not r.notes
+
+
+def test_more_than_ten_boards_does_not_crash():
+    rows = ["TOTO", "ORDINARY"] + [" ".join(f"{n:02d}" for n in range(1, 7))] * 11 + _DRAW_ROWS
+    r = read_rows(rows)
+    assert len(r.draft.entries) + len(r.draft.errors) >= 11
+    assert any("More than 10 boards" in n for n in r.notes)
+
+
+def test_4d_footer_rows_are_dropped():
+    r = read_rows(["4D", "ORDINARY", "A 1234 BIG $1 SML $1", "DRAW: WED 21/10/26 5551/26", "PRICE: $2.00",
+                   "20/10/26 01:42 PM 100000001", "000000-0-0000000-000 20000002", "000-0000000-0000000",
+                   "8812 BIG"])
+    assert r.draft.ready and not r.draft.errors and len(r.draft.entries) == 1
+    assert "PM" not in r.text and "8812" not in r.text and "PRICE: $2.00" in r.text
+
+
+def test_4d_footer_found_by_serial_when_the_time_is_unreadable():
+    r = read_rows(["4D", "ORDINARY", "A 1234 BIG $1 SML $1", "DRAW: WED 21/10/26 5551/26",
+                   "0 123456-0-000 $", "5551 0042 7781 2093"])
+    assert r.draft.ready and not r.draft.errors and "5551 0042" not in r.text
+
+
 # ---------------------------------------------------------------- from an OcrResult
 
 def _result(rows, conf=0.95):
