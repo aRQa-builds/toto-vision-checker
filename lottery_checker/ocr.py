@@ -120,8 +120,12 @@ class OcrResult:
         rows: list[list[tuple]] = []
         for x, y, h, w in items:
             if rows:
-                rx, ry, rh, _ = rows[-1][0]
-                if abs(y - ry) <= tolerance * max(h, rh):
+                # Compute row mean y and mean height from all words currently in the row
+                row_words = [i[3] for i in rows[-1]]
+                row_mean_y = sum(iy for _, iy, ih, _ in rows[-1]) / len(rows[-1])
+                row_mean_h = sum(ih for _, _, ih, _ in rows[-1]) / len(rows[-1])
+                
+                if abs(y - row_mean_y) <= tolerance * max(h, row_mean_h):
                     rows[-1].append((x, y, h, w))
                     continue
             rows.append([(x, y, h, w)])
