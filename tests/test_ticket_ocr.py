@@ -291,3 +291,140 @@ def test_glued_watermark_letters_and_spaced_dates():
     assert fix_token("R888") == "R888" and fix_token("4D") == "4D" and fix_token("PO") == "PO"
     assert fix_token("ORDING") == "ORDINARY" and fix_token("SYSTE") == "SYSTEM"
     assert clean_row("APORE MON 19 / 10 / 26E 4227/26") == "MON 19/10/26 4227/26"
+
+
+# ---------------------------------------------------------------- P3-02-R2: seven real photos, 5 Nov 2026
+# Row output of Google Vision on real tickets (a02, a03, a04, a05, a06). Serial, terminal and
+# barcode numbers are dummies; everything else is exactly what Vision returned.
+
+A02 = """F No more cheques from 1 Nov 2026 POOL
+Link NRIC to PayNow for payouts
+POO ORDINARY SINGAP
+A. 12 13 14 16 26 39 QP
+B. 3.04 INGAPORE 24 28 33 38 39 QP PO
+PRICE : $ 4.00 SIN
+DRAW : LS APORE
+THU 10/09/26 4216/26 RẺ
+MON 14/09/26 4217726
+09/09/26 01:42 PM 100000000
+111111-1-1111111-111 11111111
+111-1111111-1111111 POOLS""".splitlines()
+
+A03 = """4D COLS
+POOLS 2026INGAPORE
+OLS No more cheques from 1 Nov
+Link SINGAPORE NRIC Cato PayNow for payouts S
+GAPORE ORDINARY
+R310 BIG $ 1 SML $ 0 POOLS
+PRICE : $ 10.00
+DRAW : SAT 31/10/26 5555/26
+SINGAP 24/10/26 06:49 PM F 000000000
+111111-1-1111111-111 11111111
+111-1111111-1111111 POO""".splitlines()
+
+A04 = """ORE F STO
+TOTOLS
+more OL cheques from 1 Nov 2026INGAPORE
+OLS No
+Link NRIC to Pay Now for payouts F
+SINGAPORE SYSTEM 7
+GAPORE
+A. 08 11 18 21 31 41 POOLS
+POOL
+46 POOLS SINGAPOR
+PRICE : $ 14.00 SINGAPORE
+DRAW : SINGAPORE FF
+SINGMON 26/10/26 4229/26
+THU 29/10/26 4230126 0000000000 POO
+24/10/26 06:49 PM PO
+111111-1-1111111-111 11111111
+111-1111111-1111111 SINGA""".splitlines()
+
+A05 = """4D S
+No more cheques from 1 Nov 2026
+Link NRIC to PayNow for payouts
+ORDINARY
+A - 0310 S BIG $ 1 SML $ 0
+OLS B. 1310 BIG $ 1 SINGAPORE SML $ 0 SINGAPORE
+GAPORE C. 2310 APORE BIG S'OUT SML $ 0 F
+3310 BIG $ 1 SML $ 0 POOLS
+4310 BIG $ 1 POSML $ 0
+0 SINGAPOR
+00 5310 BIG $ 1 SIN SML $ 0
+SINGAP GR 6310 SINGAPORE BIG $ 1 SML $ 0 F
+H. 7310 BIG $ 1 SML $ 0 POO
+8310 PO BIG $ 1 SML $ 0 SINGA
+P 0 9 . 9310 BIG $ 1 SMLCSOORE
+SINPRICE POBE : $ 9.00 S
+DRAW : SUN 25/10/26 5553/26 PO
+24/10/26 06:49 PM P 000000000
+111111-1-1111111-111 11111111
+111-1111111-1111111 SINGAPORE""".splitlines()
+
+A06 = """POOLS 503
+SINGAPORE 4D
+UL No more cheques from 1 Nov 2026
+Link NRIC to PayNow for payouts
+POOLS iBet
+A - 6214 INGA BIG $ 1 SML $ 0 UL
+24 PERMUTATIONS
+5413 BIG $ 1 SML $ 0 POO
+24 PERMUTATIONS
+PO PRICE : $ 4.00 SINGAPORE
+DRAW : SINGAPORE
+WED 28/10/26 5554/26 EL
+SAT 31/10/26 5555/26
+24/10/26 06:49 PM 000000000
+111111-1-1111111-111 11111111
+111-1111111-1111111""".splitlines()
+
+
+def test_slash_read_as_a_digit_in_a_draw_number_is_put_back():
+    assert clean_row("MON 14/09/26 4217726") == "MON 14/09/26 4217/26"
+    assert clean_row("THU 29/10/26 4230126 0000000000") == "THU 29/10/26 4230/26 0000000000"
+    assert clean_row("THU 10/09/26 4216/26") == "THU 10/09/26 4216/26"
+    assert clean_row("23/09/26 01:51 PM 177302004") == "23/09/26 01:51 PM 177302004"
+
+
+def test_a02_second_board_and_second_draw_survive():
+    d = read_rows(A02).draft
+    assert d.ready and not d.errors
+    assert [e.numbers for e in d.entries] == [(12, 13, 14, 16, 26, 39), (4, 24, 28, 33, 38, 39)]
+    assert d.draw_numbers == [4216, 4217]
+
+
+def test_a04_toto_title_lost_is_found_from_the_system_header():
+    r = read_rows(A04)
+    assert r.draft.game == "toto" and r.draft.ready and not r.draft.errors
+    assert r.draft.entries[0].kind == "system"
+    assert r.draft.entries[0].numbers == (8, 11, 18, 21, 31, 41, 46)
+    assert r.draft.draw_numbers == [4229, 4230]
+    assert not any("Couldn't tell" in n for n in r.notes)
+
+
+def test_a03_4d_roll_header_noise_is_not_an_error():
+    d = read_rows(A03).draft
+    assert d.game == "4d" and d.ready and not d.errors
+    assert [(e.kind, e.number, e.big, e.small) for e in d.entries] == [("roll", "R310", 1, 0)]
+    assert d.draw_numbers == [5555] and d.printed_price == 10.0
+
+
+def test_a06_4d_ibet_header_noise_is_not_an_error():
+    d = read_rows(A06).draft
+    assert d.game == "4d" and d.ready and not d.errors
+    assert [(e.kind, e.number) for e in d.entries] == [("ibet", "6214"), ("ibet", "5413")]
+    assert d.draw_numbers == [5554, 5555] and d.printed_price == 4.0
+
+
+def test_a05_ten_line_4d_ticket_reads_every_live_bet():
+    d = read_rows(A05).draft
+    # 2310 is fully sold out (BIG S'OUT SML $0), so it is not a bet
+    assert [e.number for e in d.entries] == ["0310", "1310", "3310", "4310", "5310", "6310",
+                                             "7310", "8310", "9310"]
+    assert d.draw_numbers == [5553] and d.printed_price == 9.0
+    assert d.ready and not d.errors
+
+
+def test_toto_without_a_title_or_system_header_still_says_it_could_not_tell():
+    r = read_rows(["A. 01 02 03 04 05 06", "DRAW:", "THU 22/10/26 4228/26"])
+    assert any("Couldn't tell" in n for n in r.notes)
