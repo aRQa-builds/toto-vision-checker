@@ -41,6 +41,10 @@ _KEEP = {
     "NUMBER", "PURCHASED", "OF", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "PM", "AM",
 }
 _DAY = r"(?:MON|TUE|WED|THU|FRI|SAT|SUN)"
+# a draw number whose "/" was read as 7, 1, l, I or |: "14/09/26 4217726" -> "14/09/26 4217/26"
+_DRAW_SLASH = re.compile(r"(\d{2}/\d{2}/(\d{2})\s+\d{4})[71lI|](?=\2\b)")
+# watermark letters glued onto a day name: "SINGMON 26/10/26" -> "MON 26/10/26"
+_GLUED_DAY = re.compile(r"\b[A-Za-z]+?(MON|TUE|WED|THU|FRI|SAT|SUN)(?=\s+\d{2}/\d{2}/\d{2}\b)", re.I)
 _DRAW = re.compile(rf"\b{_DAY}\s+\d{{2}}/\d{{2}}/\d{{2}}\s+\d{{3,4}}/\d{{2}}\b", re.I)
 _DRAW_NO_ONLY = re.compile(r"\b\d{4}/\d{2}\b")
 _PRICE = re.compile(r"\bPRICE\s*:?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)", re.I)
@@ -126,6 +130,10 @@ def fix_token(tok: str) -> str:
 def clean_row(row: str) -> str:
     # Vision can space out a date: "19 / 10 / 26E" -> "19/10/26E" (then the E is dropped below)
     row = _SPACED_DATE.sub(lambda m: f"{m.group(1)}/{m.group(2)}/{m.group(3)}", row)
+    # a draw number whose "/" was read as 7, 1, l, I or |: "14/09/26 4217726" -> "14/09/26 4217/26"
+    row = _DRAW_SLASH.sub(r"\1/", row)
+    # watermark letters glued onto a day name: "SINGMON 26/10/26" -> "MON 26/10/26"
+    row = _GLUED_DAY.sub(r"\1", row)
     toks = [fix_token(t) for t in row.split()]
     return " ".join(t for t in toks if not is_watermark(t))
 
@@ -144,7 +152,7 @@ def read_rows(rows: Sequence[str]) -> PhotoRead:
     joined = "\n".join(rows).upper()
     notes: list[str] = []
 
-    if re.search(r"\bTOTO\b", joined):
+    if re.search(r"\bTOTO\b|\bSYSTEM\s*\d", joined):
         text = _toto_text(rows, notes)
     elif re.search(r"\b4D\b|\bBIG\b|\bSML\b", joined):
         # 4D branch: stop at the first footer match
@@ -155,6 +163,19 @@ def read_rows(rows: Sequence[str]) -> PhotoRead:
                 break
         if cut_i is not None:
             rows = rows[:cut_i]
+        # header noise above the bet-type row, digit-only stray rows, a glued price row
+        for i, row in enumerate(rows):
+            if re.search(r"\b(?:ORDINARY|IBET|ROLL|SYSTEM)\b", row, re.I):
+                rows = rows[i:]
+                break
+        rows = [r for r in rows if not re.fullmatch(r"\d{1,3}", r.strip())]
+        fixed = []
+        for row in rows:
+            pm = re.search(r"\$\s*(\d+\.\d{2})", row)
+            if pm and re.search(r"PRICE\b", row, re.I):
+                row = f"PRICE: ${pm.group(1)}"
+            fixed.append(row)
+        rows = fixed
         text = "4D\n" + "\n".join(rows)
         notes.append("4D photo reading is new: check every number and stake.")
     else:
@@ -224,6 +245,9 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
                 else:                               # QP printed after a board just closed
                     boards[-1] = (boards[-1][0], boards[-1][1], True)
                 continue
+            om = re.match(r"^\d\.(\d{2})$", tok)
+            if om:
+                tok = om.group(1)
             if _NUM.match(tok):
                 if len(cur) == size:
                     close()
