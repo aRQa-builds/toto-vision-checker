@@ -16,8 +16,9 @@ Handoff: `$ARGUMENTS`
 
 - Read the handoff file and nothing else: no repo tour, no @codebase. The brief, target and
   gate are named inside it.
-- If the handoff carries the **🔁 REPEAT FAILURE** banner, do not fix. Write
-  `Lead check requested — repeat failure` under **Outcome** and stop. That one belongs to Lead.
+- A **🔁 REPEAT FAILURE** banner does not skip L1: fix it. Identical failures suggest the spec or
+  test is at fault, so if your first change fails the same way Hand did, stop under the stall rule
+  below (Lead check).
 - If it is tagged `no-cloud-escalation`, stop. It goes to Lead locally.
 
 ## Fix forward

@@ -4,8 +4,8 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-10-29
-- **Next session intent**: longer owner sitting: Cloudflare Email (SPF/DKIM, token), Grayskull env vars and setup-web.ps1, P2-05 alias, swap TOTO_CONTACT, send P2-06. Testing phase renewed to 2026-11-05 14:40.
+- **Last session**: 2026-11-05 (session 3)
+- **Next session intent**: longer owner sitting: Cloudflare Email (SPF/DKIM, token), Grayskull env vars and setup-web.ps1, P2-05 alias, swap TOTO_CONTACT, send P2-06. Testing phase runs to 2026-11-09 23:57 UTC (renewed twice; the earlier 2026-11-05 date here was stale).
 
 ## Current Task
 P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-5552 and Toto 4227-4228 stored. Remaining: P2-05 alias, then switch `TOTO_CONTACT` to results@zenqi.cc.
@@ -94,3 +94,41 @@ Switch accounts on (owner steps above), then P2-05 alias, P0-02 ticket photos, P
 
 ### Tally
 L1 1 (`stats.py`; Hand failed twice) · LEAD DIRECT 1 (route and owner.html wiring, small) · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lesson to land: check the type of each field in the test fixtures before iterating it (Hand iterated the int `additional` as a list).
+
+## Session 3 close (2026-11-05)
+
+### Done
+- Config sync: pulled `fix.md`, `open.md`, `run.md` from Coffee_Crew_HQ (REPEAT FAILURE now goes to L1; HLQT heartbeat rule). Committed with `hlqt.md`.
+- Testing phase checked: already renewed to 2026-11-09 23:57 UTC (2 renewals), so no renewal made. Date above corrected.
+- Accounts switch-on (#12) checked, not done: `CLOUDFLARE_EMAIL_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` unset on Grayskull; Cloudflare Email Sending status unreadable (API 401). Owner steps unchanged.
+- P3-02-H parser hardening (`specs/p3-02-harden.md`; `91cf9f3` red tests, `c25b8a3` fix): impossible `SYSTEM n` header takes the type from the count; more than 10 boards no longer raises `StopIteration`; 4D drops footer rows. Hand, attempt 1, `uncatalogued`. 575 pytest + 9 node tests green.
+- Live web checker restarted onto the new parser.
+
+### Tally
+LOCAL 1 (P3-02-H, uncatalogued) · L1 0 · L2 0 · LEAD DIRECT 0 · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lessons landed: 1.
+`Delegable: 1 of 1`.
+Escalation: LOCAL 1 · L1 0 · L2 0 (uncatalogued 1).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Switch accounts on: Cloudflare Email Sending for zenqi.cc (SPF/DKIM), token with "Email Sending: Edit", set both env vars on Grayskull. |
+| input | P2-05 results@zenqi.cc alias, then P2-06 permission email. |
+| input | Real ticket photos (System 7-11, Roll, 4D) for P0-02, P4-09, P4-10. |
+| decision | Push to the public remote (25+ commits ahead). |
+| decision | Singapore Pools permission (gates P2-04 backfill, paid tier, ads, Play, publishing stats). |
+
+### Next
+Owner steps above, accounts switch-on first. Then P2-05, then P2-06. Unframed: Special/Hong Bao draws.
+
+### Merged
+None.
+
+### Deployed
+Parser hardening live on toto.zenqi.cc, 2026-11-05 00:16 (service restart).
+
+### Discoveries
+- `MISS` (process): `tools\setup-web.ps1` run from a non-elevated session stopped the server, then `Register-ScheduledTask` was denied, so the site was down (502) about 2 minutes until `Start-ScheduledTask` restored it. Safe restart after a .py change: end the python process (keep-alive loop restarts it) or `Start-ScheduledTask`.
+- `SCOPE`: make `setup-web.ps1` check it can register before it stops anything, or skip re-registering when the task exists.
+
+2026-11-05 | delegable: 1 of 1 | reasons: none | LOCAL: 1 · L1: 0 · L2: 0 (uncatalogued: 1) | lessons landed: 1

@@ -29,6 +29,8 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - Roadmap in standard P/M/ID traffic-light format, mobile table with Blocker → next column.
 
 ## Watch Points
+- Python changes load at server start only. Restart the live web checker by ending the python process (the keep-alive loop restarts it) or `Start-ScheduledTask`. Do NOT run `tools\setup-web.ps1` from a non-elevated session: it stops the server first, then fails to re-register (access denied) and leaves the site down.
+- Photo parser rejects an impossible `SYSTEM n` (outside 7-12) and takes the bet type from the number count; 4D photo text is cut at the footer (time or dashed serial). Still built on two real TOTO Ordinary tickets only.
 - iBet two-permutation win payout is an assumption.
 - Special/Hong Bao Toto draws not scheduled.
 - Ticket layout (draw no. vs date) unknown until photos.

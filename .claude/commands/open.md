@@ -59,6 +59,11 @@ Using the local context emitted by `scout-open.mjs` above:
      proposal file `.refresh-proposals/<date>-<id>.md`. Any OVERDUE row is a missed cycle,
      so raise it as a blocker as well. Never land a proposal at `/open`: Grace rules are
      owner-landed.
+   - **HLQT lane heartbeat** (the `HLQT:` or `HLQT ` line in the orientation above, read from
+     `hlqt-status.json`). `HLQT OK` needs no action. `WARN` or `FAULT` goes in the Blocked table with the
+     finding codes shown. `STALE (scheduler not running)` goes in as **AWAITING OWNER**: the 5-minute
+     scheduled check is not running. `no heartbeat status yet` is not a blocker. Never run the check, restart
+     the dispatcher or drop a ticket from `/open`; report it. A `RESOURCE FAULT` from the GPU is a wait, not a failure.
 
 2. **Skill-pull check (catalog drift, Tier 3 "promote, not clone"):**
    Run `node d:/SakuraHydra/Coffee_Crew_HQ/scripts/skill-pull.mjs --project .` from the current
@@ -78,16 +83,19 @@ Using the local context emitted by `scout-open.mjs` above:
 
 3. **Render Scoped Roadmap (Macro View):**
    Display the high-level status matrix parsed from `PROJECT_BRAIN.md`
-   (in `Coffee_Crew_HQ`, which has none by design, use `SPRINT.md`; `roadmap-report.mjs` refuses there, RR-01):
+   (in `Coffee_Crew_HQ`, which has none by design, use `SPRINT.md`; `roadmap-report.mjs` refuses there, RR-01).
 
-   | Module / AD | Initial Scope Objective | Current Status | Key Blocker / Milestone |
-   | :--- | :--- | :--- | :--- |
-
-   **Traffic-light variant (owner, 2026-10-16).** When the arguments ask for roadmap traffic
-   lights (e.g. `/open roadmap traffic with item No`), render this shape instead:
+   **Traffic-light numbered table is the DEFAULT in every project (owner, 2026-11-03; variant
+   first introduced 2026-10-16).** No argument is needed. Render this shape:
 
    | # | Module / AD | Initial Scope Objective | Status | Key Blocker / Milestone |
    | :-- | :--- | :--- | :---: | :--- |
+
+   Plain-table opt-out: only when the arguments ask for it (e.g. `/open plain roadmap`), render
+   the legacy four-column shape instead, with no `#` and no light:
+
+   | Module / AD | Initial Scope Objective | Current Status | Key Blocker / Milestone |
+   | :--- | :--- | :--- | :--- |
 
    - `#` numbers every row from 1, so the owner can refer to items by number. Re-use those
      numbers in the Daily Queue and Orientation (e.g. "device passes (items 9, 10, 12)").
@@ -107,7 +115,8 @@ Using the local context emitted by `scout-open.mjs` above:
 5. **Read Tally Before Planning:**
    - **`SPEC FAULT`** → Freya/Doris is thin.
    - **`L1`** → Spec is shallow, or Hand lacks a lesson. Check the handoff's "Lesson for Hand".
-   - **`L2`** → Hard problem; do not over-promote.
+   - **`L2`** → Hard escalation to the cloud, reached only after L1 failed. Read the handoff first:
+     a `REPEAT FAILURE` is a spec or lesson gap, not necessarily a hard problem. Do not over-promote.
    - **Escalation rate** → read `LOCAL : L1 : L2` across the delegable log in SPRINT.md. It
      should drift toward LOCAL as `hand-lessons.md` grows. Flat across six lines means the
      lessons are not transferring. Say so in orientation.

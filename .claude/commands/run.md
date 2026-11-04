@@ -41,7 +41,7 @@ or the test yourself.
 | Exit | Meaning | Report |
 |---|---|---|
 | 0 | Gate green (attempt 1 or 2). Change applied, not committed | Show `git diff --stat` on the target. Candidate **LOCAL** |
-| 1 | Escalated — both attempts failed. Target reverted; `handoff-<nn>.md` written | Path of the handoff file. Next tier is `/fix <handoff>`. If the script printed **REPEAT FAILURE**, say "Lead check" instead: identical failures point at the spec or test (also Lead if `no-cloud-escalation`) |
+| 1 | Escalated — both attempts failed. Target reverted; `handoff-<nn>.md` written | Path of the handoff file. Next tier is `/fix <handoff>`. A **REPEAT FAILURE** still goes to `/fix`; say the two attempts failed identically, since that points at the spec or test and `/fix` stops for a Lead check if the failure holds (Lead directly only if `no-cloud-escalation`) |
 | 2 | Usage error, dirty target, or gate already green | The script's message. Nothing to delegate |
 | 3 | RESOURCE FAULT or VOID. Not a counted attempt | The script's message. Re-run once the station is clear |
 | 4 | Held by VIS (session paused or aborted) | The script's message |

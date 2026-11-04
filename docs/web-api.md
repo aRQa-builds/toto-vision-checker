@@ -212,6 +212,10 @@ stays unreachable except through the tunnel.
      `tools\setup-web.ps1`.
    - `setup-tunnel.ps1` without `-Status` builds a separate named tunnel; it is only for
      a PC without the sakura-hud service, and refuses to replace it unless `-Force`.
+   After changing a .py file, restart by ending the python process (the loop restarts it) or
+   `Start-ScheduledTask -TaskPath '\ZenQi\TotoChecker\' -TaskName 'Web checker'`. Do not re-run
+   `setup-web.ps1` from a non-elevated session: it stops the server, then `Register-ScheduledTask`
+   is denied and the site stays down.
 3. Keep the web checker running: `powershell -ExecutionPolicy Bypass -File tools\setup-web.ps1`
    registers `\ZenQi\TotoChecker\Web checker`, which starts at logon and runs
    `tools\web-service.cmd` hidden: that loop starts the server again 10 s after it stops
