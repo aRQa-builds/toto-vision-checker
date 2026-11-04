@@ -5,6 +5,8 @@ on two real TOTO Ordinary QP tickets, 22 Oct 2026. Serial and barcode numbers
 are replaced with dummies; everything else is exactly what Vision returned,
 watermark noise included.
 """
+import pytest
+
 from lottery_checker import ocr
 from lottery_checker.ticket_ocr import clean_row, is_watermark, read_ocr, read_rows, rows_from_text
 
@@ -433,3 +435,58 @@ def test_a05_ten_line_4d_ticket_reads_every_live_bet():
 def test_toto_without_a_title_or_system_header_still_says_it_could_not_tell():
     r = read_rows(["A. 01 02 03 04 05 06", "DRAW:", "THU 22/10/26 4228/26"])
     assert any("Couldn't tell" in n for n in r.notes)
+
+
+# P3-02-S: System 8-11 from synthetic rows. No real System 8-11 ticket exists, so these are
+# built on the real A04 (System 7) row shape: watermark glue, a wrapped tail row, a lost title.
+# Dummy numbers and serials. Guards: the parser already reads these; they must stay green.
+def _sys_rows(n, boards, price, header=None):
+    rows = ["ORE F STO", "TOTOLS", "more OL cheques from 1 Nov 2026INGAPORE", "OLS No",
+            "Link NRIC to Pay Now for payouts F", f"SINGAPORE {header or f'SYSTEM {n}'}", "GAPORE"]
+    for letter, nums in boards:
+        rows += [f"{letter}. " + " ".join(nums[:6]) + " POOLS", "POOL",
+                 " ".join(nums[6:]) + " POOLS SINGAPOR"]
+    rows += [f"PRICE : $ {price}.00 SINGAPORE", "DRAW : SINGAPORE FF",
+             "THU 29/10/26 4230126 0000000000 POO", "24/10/26 06:49 PM PO",
+             "111111-1-1111111-111 11111111"]
+    return rows
+
+
+_SYS_NUMS = {
+    8: ("03 09 14 22 30 37 41 45".split(), 28),
+    9: ("02 07 13 19 25 33 38 44 49".split(), 84),
+    10: ("01 06 12 18 24 29 35 40 43 48".split(), 210),
+    11: ("04 05 11 17 23 28 34 39 42 46 47".split(), 462),
+}
+
+
+@pytest.mark.parametrize("n", [8, 9, 10, 11])
+def test_system_8_to_11_wrapped_board_reads_as_one_board(n):
+    nums, price = _SYS_NUMS[n]
+    r = read_rows(_sys_rows(n, [("A", nums)], price))
+    d = r.draft
+    assert d.game == "toto" and d.ready and not d.errors
+    assert [(e.kind, e.numbers) for e in d.entries] == [("system", tuple(int(x) for x in nums))]
+    assert d.draw_numbers == [4230] and d.printed_price == float(price)
+
+
+def test_system_8_two_boards_each_keep_their_wrapped_tail():
+    a, _ = _SYS_NUMS[8]
+    b = "02 08 13 20 26 31 36 44".split()
+    d = read_rows(_sys_rows(8, [("A", a), ("B", b)], 56)).draft
+    assert d.ready and not d.errors
+    assert [e.numbers for e in d.entries] == [tuple(int(x) for x in a), tuple(int(x) for x in b)]
+
+
+def test_system_header_number_misread_takes_the_type_from_the_count():
+    nums, price = _SYS_NUMS[9]
+    r = read_rows(_sys_rows(9, [("A", nums)], price, header="SYSTEM 19"))
+    assert r.draft.ready and not r.draft.errors
+    assert [(e.kind, len(e.numbers)) for e in r.draft.entries] == [("system", 9)]
+    assert any("doesn't exist" in n for n in r.notes)
+
+
+def test_system_header_number_lost_fails_loudly_and_never_guesses():
+    nums, price = _SYS_NUMS[9]
+    d = read_rows(_sys_rows(9, [("A", nums)], price, header="SYSTEM")).draft
+    assert not d.ready and d.errors
