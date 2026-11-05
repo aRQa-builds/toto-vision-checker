@@ -121,7 +121,6 @@ class OcrResult:
         for x, y, h, w in items:
             if rows:
                 # Compute row mean y and mean height from all words currently in the row
-                row_words = [i[3] for i in rows[-1]]
                 row_mean_y = sum(iy for _, iy, ih, _ in rows[-1]) / len(rows[-1])
                 row_mean_h = sum(ih for _, _, ih, _ in rows[-1]) / len(rows[-1])
                 
