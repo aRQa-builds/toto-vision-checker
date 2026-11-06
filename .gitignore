@@ -28,3 +28,7 @@ tests/fixtures/**/*.jpg
 tests/fixtures/**/*.html
 tests/fixtures/*.html
 tests/fixtures/screens/
+
+# local-only, never publish
+archive/
+handoff-*.md

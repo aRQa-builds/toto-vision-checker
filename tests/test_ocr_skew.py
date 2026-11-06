@@ -46,7 +46,7 @@ def _w(text, x, y, h):
 
 
 def test_a_tall_watermark_word_does_not_split_a_board_row():
-    """Real TOTO photo a02 (word centres after deskew, 5 Nov 2026). The watermark word INGAPORE
+    """Real TOTO photo a02 (now 07_toto_ordinary_4216_4217.jpg) (word centres after deskew, 5 Nov 2026). The watermark word INGAPORE
     (h 28, y 562) started board B's row; 3.04 (h 37, y 584) was 22 px away, just over the
     0.6 x 37 = 22.2 tolerance measured from that first word, so the row split in two."""
     words = [_w("A.", 92, 539, 34), _w("12", 137, 538, 35), _w("13", 201, 538, 35),
@@ -63,7 +63,7 @@ def test_a_tall_watermark_word_does_not_split_a_board_row():
 
 
 def test_4d_bet_rows_keep_number_and_stake_together():
-    """Real 4D photo a05: the big number (h 32) sits about 10 px below its small stake text (h 18)."""
+    """Real 4D photo a05 (now 10_4d_ordinary_10line_5553.jpg): the big number (h 32) sits about 10 px below its small stake text (h 18)."""
     words = [_w("B.", 148, 454, 18), _w("BIG", 330, 455, 18), _w("1", 372, 455, 18),
              _w("SML", 450, 454, 19), _w("0", 508, 454, 19),
              _w("1310", 214, 464, 32),

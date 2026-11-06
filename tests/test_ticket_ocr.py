@@ -296,7 +296,7 @@ def test_glued_watermark_letters_and_spaced_dates():
 
 
 # ---------------------------------------------------------------- P3-02-R2: seven real photos, 5 Nov 2026
-# Row output of Google Vision on real tickets (a02, a03, a04, a05, a06). Serial, terminal and
+# Row output of Google Vision on real tickets (a02 = 07, a03 = 08, a04 = 09, a05 = 10, a06 = 11 in tests/fixtures/tickets; a01 = 06). Serial, terminal and
 # barcode numbers are dummies; everything else is exactly what Vision returned.
 
 A02 = """SINGAPO TOTO
@@ -490,3 +490,43 @@ def test_system_header_number_lost_fails_loudly_and_never_guesses():
     nums, price = _SYS_NUMS[9]
     d = read_rows(_sys_rows(9, [("A", nums)], price, header="SYSTEM")).draft
     assert not d.ready and d.errors
+
+
+# P3-02-R: TOTO System Roll from synthetic rows. No real System Roll ticket exists, so these use
+# the same row shape as the real System 7 photo (09), with a SYSTEM ROLL header, 5 numbers per
+# board and a $44 price (5 chosen numbers x the other 44). Dummy numbers and serials. Guards.
+_ROLL_A = "05 12 19 27 38".split()
+_ROLL_B = "03 14 22 31 46".split()
+
+
+def _roll_rows(boards, price, header="SYSTEM ROLL"):
+    rows = ["ORE F STO", "TOTOLS", "more OL cheques from 1 Nov 2026INGAPORE", "OLS No",
+            "Link NRIC to Pay Now for payouts F", f"SINGAPORE {header}", "GAPORE"]
+    for letter, nums in boards:
+        rows += [f"{letter}. " + " ".join(nums) + " POOLS", "POOL"]
+    rows += [f"PRICE : $ {price}.00 SINGAPORE", "DRAW : SINGAPORE FF",
+             "THU 29/10/26 4230126 0000000000 POO", "24/10/26 06:49 PM PO",
+             "111111-1-1111111-111 11111111"]
+    return rows
+
+
+def test_system_roll_board_reads_as_one_five_number_board():
+    d = read_rows(_roll_rows([("A", _ROLL_A)], 44)).draft
+    assert d.game == "toto" and d.ready and not d.errors
+    assert [len(e.numbers) for e in d.entries] == [5]
+    assert d.entries[0].numbers == tuple(int(x) for x in _ROLL_A)
+    assert "roll" in d.entries[0].kind.lower()
+    assert d.draw_numbers == [4230] and d.printed_price == 44.0
+
+
+def test_system_roll_two_boards_do_not_merge():
+    d = read_rows(_roll_rows([("A", _ROLL_A), ("B", _ROLL_B)], 88)).draft
+    assert d.ready and not d.errors
+    assert [e.numbers for e in d.entries] == [tuple(int(x) for x in _ROLL_A),
+                                              tuple(int(x) for x in _ROLL_B)]
+
+
+def test_system_roll_header_glued_or_spaced_reads_the_same():
+    for header in ("SYSTEMROLL", "SYSTEM  ROLL"):
+        d = read_rows(_roll_rows([("A", _ROLL_A)], 44, header=header)).draft
+        assert d.ready and not d.errors and len(d.entries[0].numbers) == 5
