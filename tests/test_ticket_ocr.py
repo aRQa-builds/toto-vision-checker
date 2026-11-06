@@ -582,3 +582,9 @@ def test_l_draw_word_is_not_read_as_a_board_letter():
     # "DRAW" must stay a header: a letter glued to R must not become board D + roll number.
     d = _parse_ticket("4D\nORDINARY\nA. 0310 BIG $ 1 SML $ 0\nDRAW : SUN 25/10/26 5553/26\nPRICE: $1.00")
     assert not d.errors and [e.number for e in d.entries] == ["0310"]
+
+
+def test_l_board_letter_needs_a_dot_or_a_space():
+    from lottery_checker.ticket_entry import _BOARD_LETTER as B
+    assert not B.match("DRAW : SUN 25/10/26") and not B.match("A0310 BIG $ 1")
+    assert B.match("G.6310 BIG") and B.match("B)5413") and B.match("A. 0310") and B.match("C R310")

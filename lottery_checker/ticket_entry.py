@@ -46,7 +46,7 @@ _DRAW_WORD = re.compile(r"\bdraws?\b\s*:?\s*((?:\d{3,4}[\s,]*)+)", re.I)
 _PRICE = re.compile(r"\bPRICE\s*:?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)", re.I)
 _PERMS = re.compile(r"\b(\d{1,2})\s+PERMUTATIONS?\b", re.I)
 _UNITS = re.compile(r"UNIT\s+NUMBER\s*:?\s*(\d+)\s*/\s*(\d+)|UNITS\s+PURCHASED\s*:?\s*(\d+)\s+of\s+(\d+)", re.I)
-_BOARD_LETTER = re.compile(r"^\s*([A-J])[.)]?\s+(?=[\dR])", re.I)
+_BOARD_LETTER = re.compile(r"^\s*([A-J])(?:[.)]\s*|\s+)(?=[\dR])", re.I)
 _FOURD_NUM = re.compile(r"(?<![\w$\-/:.])([0-9R]{4})(?![\w\-/:.])", re.I)
 _SIDE = re.compile(r"\b(BIG|SML|SMALL|B|S)(?![A-Za-z'])\s*:?\s*(S'?OUT|\$?\s*\d+\*?)", re.I)
 _TOTO_HEADER = re.compile(
@@ -309,7 +309,12 @@ def _add_toto(d: TicketDraft, i: int, raw: str, nums: list[int], kind: Optional[
 def _add_fourd(d: TicketDraft, i: int, raw: str, line: str, kind: str) -> None:
     m = _BOARD_LETTER.match(line)
     body = line[m.end():] if m else line
-    nums = _FOURD_NUM.findall(body.split("BIG")[0] if "BIG" in body.upper() else body)
+    
+    # Handle stray digit before the number (e.g., "1.7310" -> "7310")
+    # Only if it matches: one digit, one dot/comma, optional spaces, then 4 digits ending at word boundary
+    body_clean = re.sub(r'^(\d)[.,]\s*([0-9R]{4})(?![\w\-/:.])', r'\2', body)
+    
+    nums = _FOURD_NUM.findall(body_clean.split("BIG")[0] if "BIG" in body.upper() else body_clean)
     nums = [n for n in nums if any(c.isdigit() for c in n)]
     if not nums:
         if re.search(r"\d", body) and not re.search(r"\d{5,}|\d-\d|\d[:/]\d", body):
