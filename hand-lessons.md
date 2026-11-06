@@ -12,3 +12,5 @@ _Hand's knowledge base. Landed by Lead at close; Hand never writes its own lesso
 9. Put each addition exactly where the spec places it (a note after the loop, not after the return) and keep every comment line the spec gives; the gate cannot see either.
 10. When a spec lists lettered or numbered sub-sections of behaviour (3a, 3b, 3c, 3d), implement every one; two identical attempts stopped after the first sub-sections, and the gate then failed on exactly the omitted ones. Before replying, tick each sub-section against your diff. (Repeat of generic HL-175.)
 11. Do not leave behind a variable or helper you no longer use after changing the logic that read it.
+12. When loosening a regex (for example making a separator optional), add a negative test: a word or code that must still not match (DRAW, A0310). A loosened pattern that stays green proves nothing.
+13. When a regex substitution must keep part of the matched text, wrap that part in a capture group and put exactly that group in the replacement; check the result against the expected string before replying.

@@ -38,7 +38,7 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 ## Completed Milestones
 - Rules ref v0.2; cl. 5.16 table verified (0/178 mismatches).
 - M1 matcher + golden tests; P2-03 capture code + Windows scripts; live on Grayskull (six scheduled tasks, first captures verified 2026-10-21 to 2026-10-24; contact ralph@arqas.io until P2-05).
-- P3-01 Vision OCR (`ocr.py`) and P3-02 ticket photo parser (`ticket_ocr.py`) live since 22 Oct 2026; Vision key on Grayskull only. Built on two real TOTO Ordinary tickets; 4D, System 7-11, Roll layouts unseen (P0-02).
+- P3-01 Vision OCR (`ocr.py`) and P3-02 ticket photo parser (`ticket_ocr.py`) live since 22 Oct 2026; Vision key on Grayskull only. Built on eleven real photos (TOTO, System 7, 4D Roll/iBet/Ordinary); System 8-11 synthetic only. P0-02 closed 2026-11-06. Test OCR input must be the page-processed image (shrink + cleanTicket), not the raw file: raw-file text hid two live bugs.
 - P4-02 web checker + P4-06 PWA + P3-07 shared results from screenshots (see docs/web-api.md). Public via tunnel (P4-03 done); P4-04 accounts built 29 Oct 2026 (code and tests done, not yet switched on: needs owner's Cloudflare Email setup, see docs/web-api.md).
 - P5-01 descriptive draw statistics (29 Oct 2026): `stats.py`, owner-only `/api/owner/stats` and a Statistics section in `/owner`. Counts only, 30-draw floor, never ranked, nothing public. Publishing stats waits on the Singapore Pools permission question.
 - Design canvas: Arcade Drum A, A2 Toto hand-off, A3 4D hand-off.
