@@ -45,6 +45,8 @@ _DAY = r"(?:MON|TUE|WED|THU|FRI|SAT|SUN)"
 _DRAW_SLASH = re.compile(r"(\d{2}/\d{2}/(\d{2})\s+\d{4})[71lI|](?=\2\b)")
 # watermark letters glued onto a day name: "SINGMON 26/10/26" -> "MON 26/10/26"
 _GLUED_DAY = re.compile(r"\b[A-Za-z]+?(MON|TUE|WED|THU|FRI|SAT|SUN)(?=\s+\d{2}/\d{2}/\d{2}\b)", re.I)
+# Pattern to remove "DRAW :" between day and date: "THU DRAW : 10/09/26" -> "THU 10/09/26"
+_DRAW_DAY_SEP = re.compile(rf"\b({_DAY})\s+DRAW\s*:?\s*(?=\d{{2}}/\d{{2}}/\d{{2}}\b)", re.I)
 _DRAW = re.compile(rf"\b{_DAY}\s+\d{{2}}/\d{{2}}/\d{{2}}\s+\d{{3,4}}/\d{{2}}\b", re.I)
 _DRAW_NO_ONLY = re.compile(r"\b\d{4}/\d{2}\b")
 _PRICE = re.compile(r"\bPRICE\s*:?\s*\$?\s*([\d,]+(?:\.\d{1,2})?)", re.I)
@@ -134,6 +136,8 @@ def clean_row(row: str) -> str:
     row = _DRAW_SLASH.sub(r"\1/", row)
     # watermark letters glued onto a day name: "SINGMON 26/10/26" -> "MON 26/10/26"
     row = _GLUED_DAY.sub(r"\1", row)
+    # Remove "DRAW :" between day and date: "THU DRAW : 10/09/26" -> "THU 10/09/26"
+    row = _DRAW_DAY_SEP.sub(r"\1 ", row)
     toks = [fix_token(t) for t in row.split()]
     return " ".join(t for t in toks if not is_watermark(t))
 
