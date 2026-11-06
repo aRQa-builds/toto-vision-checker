@@ -5,6 +5,8 @@ on two real TOTO Ordinary QP tickets, 22 Oct 2026. Serial and barcode numbers
 are replaced with dummies; everything else is exactly what Vision returned,
 watermark noise included.
 """
+from pathlib import Path
+
 import pytest
 
 from lottery_checker import ocr
@@ -608,3 +610,35 @@ def test_w07_page_image_rows_keep_both_draws():
     r = read_rows(_W07)
     assert r.draft.draw_numbers == [4216, 4217] and r.draft.printed_price == 4.0
     assert r.draft.ready and not r.draft.errors and not r.draft.warnings
+
+
+# P3-02-P: Vision rows for the image the PAGE sends (web/index.html shrink + cleanTicket), one
+# fixture per real photo, saved 2026-11-06 (serial rows dropped; they sit after the footer).
+# Raw-file rows (above) missed two live bugs because the page's image reads differently.
+_PAGE_DIR = Path(__file__).parent / "fixtures" / "ocr"
+_T = lambda *n: tuple(n)                                   # noqa: E731
+_PAGE_CASES = {
+    "01": ("toto", [4227], 2.0, [_T(2, 5, 15, 19, 20, 27), _T(2, 5, 15, 19, 40, 41)]),
+    "02": ("toto", [4227], 7.0, [_T(2, 15, 19, 20, 27, 30, 41)]),
+    "03": ("toto", [4227, 4228], 4.0, [_T(3, 8, 11, 19, 27, 30), _T(5, 12, 22, 31, 38, 44)]),
+    "04": ("toto", [4224, 4225, 4226, 4227], 4.0, [_T(2, 15, 19, 20, 33, 45)]),
+    "05": ("4d", [5551], 5.0, [("ordinary", "8455"), ("ordinary", "9363"), ("ordinary", "1234")]),
+    "06": ("toto", [4220, 4221], 4.0, [_T(10, 13, 26, 28, 36, 42), _T(3, 11, 17, 35, 45, 46)]),
+    "07": ("toto", [4216, 4217], 4.0, [_T(12, 13, 14, 16, 26, 39), _T(4, 24, 28, 33, 38, 39)]),
+    "08": ("4d", [5555], 10.0, [("roll", "R310")]),
+    "09": ("toto", [4229, 4230], 14.0, [_T(8, 11, 18, 21, 31, 41, 46)]),
+    "10": ("4d", [5553], 9.0, [("ordinary", n) for n in
+                               ("0310", "1310", "3310", "4310", "5310", "6310", "7310", "8310", "9310")]),
+    "11": ("4d", [5554, 5555], 4.0, [("ibet", "6214"), ("ibet", "5413")]),
+}
+
+
+@pytest.mark.parametrize("key", sorted(_PAGE_CASES))
+def test_p_page_processed_photo_rows_read_the_whole_ticket(key):
+    game, draws, price, bets = _PAGE_CASES[key]
+    rows = (_PAGE_DIR / f"{key}_page.rows.txt").read_text(encoding="utf-8").splitlines()
+    d = read_rows(rows).draft
+    assert d.game == game and d.ready and not d.errors
+    assert d.draw_numbers == draws and d.printed_price == price
+    got = [e.numbers if game == "toto" else (e.kind, e.number) for e in d.entries]
+    assert got == bets
