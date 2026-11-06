@@ -588,3 +588,23 @@ def test_l_board_letter_needs_a_dot_or_a_space():
     from lottery_checker.ticket_entry import _BOARD_LETTER as B
     assert not B.match("DRAW : SUN 25/10/26") and not B.match("A0310 BIG $ 1")
     assert B.match("G.6310 BIG") and B.match("B)5413") and B.match("A. 0310") and B.match("C R310")
+
+
+# P3-02-W: rows as Vision returns them for the image the PAGE sends (shrunk to 2000 px and
+# watermark-filtered by web/index.html), photo 07. Raw-file rows (A02 above) read fine; the
+# page's image puts the printed word DRAW between the day name and the date.
+_W07 = ["PO ORDINARY", "A. 12 13 14 16 26 39 QP", "B. 04 24 28 33 38 39 QP", "PRICE : $ 4.00",
+        'THU DRAW : 10/09/26 4216126 - $ 10 67 PORE "', "RE", "MON 14/09/26 4217/26",
+        "09/09/26 01:42 PM 177302006", "TOTO"]
+
+
+def test_w07_draw_word_between_day_and_date_is_dropped():
+    assert clean_row('THU DRAW : 10/09/26 4216126 - $ 10 67 PORE "').startswith("THU 10/09/26 4216/26")
+    assert clean_row("THU DRAW 10/09/26 4216/26") == "THU 10/09/26 4216/26"
+    assert clean_row("DRAW : THU 10/09/26 4216/26") == "DRAW : THU 10/09/26 4216/26"
+
+
+def test_w07_page_image_rows_keep_both_draws():
+    r = read_rows(_W07)
+    assert r.draft.draw_numbers == [4216, 4217] and r.draft.printed_price == 4.0
+    assert r.draft.ready and not r.draft.errors and not r.draft.warnings
