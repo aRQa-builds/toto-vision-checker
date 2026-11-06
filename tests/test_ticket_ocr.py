@@ -530,3 +530,55 @@ def test_system_roll_header_glued_or_spaced_reads_the_same():
     for header in ("SYSTEMROLL", "SYSTEM  ROLL"):
         d = read_rows(_roll_rows([("A", _ROLL_A)], 44, header=header)).draft
         assert d.ready and not d.errors and len(d.entries[0].numbers) == 5
+
+
+# P3-02-L: 4D board-letter and stray-digit Vision variants seen live on photos 10 and 11
+# (2026-11-06). The ticket text below is what the page's text box held after read_rows.
+from lottery_checker.ticket_entry import parse_ticket as _parse_ticket
+
+_L10 = """4D
+ORDINARY
+- 0310 BIG $ 1 SML $ 0
+B. 1310 BIG $ 1 SML $ 0
+- 2310 BIG S'OUT SML $ 0
+D. 3310 BIG $ 1 SML $ 0
+E. 4310 BIG $ 1 SML $ 0
+4 - 5310 BIG $ 1 SML $ 0
+G.6310 BIG $ 1 SML $ 0
+H. 1.7310 BIG $ 1 SML $ 0
+I. 8310 BIG $ 1 SML $ 0
+J. 9310 BIG $ 1 SML $ 0
+PRICE: $9.00
+DRAW : SUN 25/10/26 5553/26"""
+
+_L11 = """4D
+iBet
+- 6214 BIG $ 1 SML $ 0
+24 PERMUTATIONS
+B.5413 BIG $ 1 SML $ 0
+24 PERMUTATIONS
+PRICE: $4.00
+DRAW :
+WED 28/10/26 5554/26
+SAT 31/10/26 5555/26"""
+
+
+def test_l10_letter_glued_to_number_and_stray_digit_read_every_live_bet():
+    d = _parse_ticket(_L10)
+    assert not d.errors
+    assert [e.number for e in d.entries] == ["0310", "1310", "3310", "4310", "5310", "6310",
+                                             "7310", "8310", "9310"]
+    assert d.draw_numbers == [5553] and d.printed_price == 9.0
+
+
+def test_l11_ibet_letter_glued_to_number_reads_both_boards():
+    d = _parse_ticket(_L11)
+    assert not d.errors
+    assert [(e.kind, e.number) for e in d.entries] == [("ibet", "6214"), ("ibet", "5413")]
+    assert d.draw_numbers == [5554, 5555] and d.printed_price == 4.0
+
+
+def test_l_draw_word_is_not_read_as_a_board_letter():
+    # "DRAW" must stay a header: a letter glued to R must not become board D + roll number.
+    d = _parse_ticket("4D\nORDINARY\nA. 0310 BIG $ 1 SML $ 0\nDRAW : SUN 25/10/26 5553/26\nPRICE: $1.00")
+    assert not d.errors and [e.number for e in d.entries] == ["0310"]
