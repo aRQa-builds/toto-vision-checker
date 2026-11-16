@@ -304,3 +304,71 @@ def test_special_draw_fixture_matches_known_numbering():
         assert date.fromisoformat(d["draw_date"]).weekday() == 4          # Friday
         assert sorted(d["shares"]) == [str(g) for g in range(1, 8)]
         assert (d["shares"]["5"]["amount"], d["shares"]["6"]["amount"], d["shares"]["7"]["amount"]) == (50, 25, 10)
+
+
+# ---------- P2-07 gap catch-up: fetch a missing draw number once (spec p2-07-gap-catchup) ----------
+
+def test_missing_draws_lists_holes_between_lowest_and_highest():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for n in (4227, 4228, 4231, 4234):
+            _stored_toto(root, n, "2026-10-01")
+        assert ingest.missing_draws("toto", root) == [4229, 4230, 4232, 4233]
+
+
+def test_missing_draws_nothing_below_lowest_and_empty_cases(tmp_path):
+    assert ingest.missing_draws("toto", tmp_path) == []             # nothing stored
+    _stored_toto(tmp_path, 4227, "2026-10-19")
+    assert ingest.missing_draws("toto", tmp_path) == []             # one draw, no hole
+    _stored_toto(tmp_path, 4228, "2026-10-22")
+    assert ingest.missing_draws("toto", tmp_path) == []             # contiguous, nothing before 4227
+
+
+def test_catch_up_fetches_a_missed_monday_by_number(monkeypatch, tmp_path):
+    """Draw 4233 (Mon 9 Nov 2026) failed on both runs; Thursday's 4234 is on file,
+    so yesterday looks fine, but Friday's catch-up must still go for 4233 by number."""
+    _stored_toto(tmp_path, 4232, "2026-11-05")
+    _stored_toto(tmp_path, 4234, "2026-11-12")              # Thu 12 Nov
+    _on(monkeypatch, "2026-11-13")                          # Fri 13 Nov
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 0
+    assert seen == [ingest.official_url("toto", 4233)]
+    # the fake page carries draw 4068, not 4233: nothing may be stored as 4233
+    assert not (tmp_path / "draws" / "toto" / "4233.json").exists()
+
+
+def test_gap_fill_stores_the_requested_draw(monkeypatch, tmp_path):
+    """A special draw on a Tuesday (draw 4068 stands in) is recovered by the next Friday run."""
+    _stored_toto(tmp_path, 4067, "2025-04-07")
+    _stored_toto(tmp_path, 4069, "2025-04-10")              # Thu draw; yesterday is stored
+    _on(monkeypatch, "2025-04-11")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 0
+    assert seen == [ingest.official_url("toto", 4068)]
+    assert (tmp_path / "draws" / "toto" / "4068.json").exists()
+
+
+def test_gap_fill_makes_one_request_per_run_lowest_hole_first(monkeypatch, tmp_path):
+    _stored_toto(tmp_path, 4230, "2026-10-29")
+    _stored_toto(tmp_path, 4233, "2026-11-12")              # holes 4231 and 4232
+    _on(monkeypatch, "2026-11-13")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    ingest.run("toto", tmp_path, catch_up=True)
+    assert seen == [ingest.official_url("toto", 4231)]
+
+
+def test_gap_fill_page_without_results_stores_nothing(monkeypatch, tmp_path, capsys):
+    """The 9 Nov failure: a redirect to a page with no results block. Loud, nothing stored."""
+    _stored_toto(tmp_path, 4232, "2026-11-05")
+    _stored_toto(tmp_path, 4234, "2026-11-12")
+    _on(monkeypatch, "2026-11-13")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp("<html><body>Maintenance</body></html>", seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 2
+    assert seen == [ingest.official_url("toto", 4233)]
+    assert not (tmp_path / "draws" / "toto" / "4233.json").exists()
+    assert "PARSE FAILED" in capsys.readouterr().err

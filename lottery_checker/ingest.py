@@ -195,6 +195,11 @@ def latest_stored(game: str, data_dir: Path) -> Optional[int]:
     return max(nums) if nums else None
 
 
+def missing_draws(game: str, data_dir: Path) -> list[int]:
+    """Draw numbers missing between the lowest and highest stored draw, ascending (P2-07 gap catch-up)."""
+    raise NotImplementedError("P2-07: see specs/p2-07-gap-catchup.md")
+
+
 def next_fourd_draw(data_dir: Path) -> int:
     last = latest_stored("4d", data_dir)
     return last + 1 if last is not None else FOURD_SEED_DRAW
