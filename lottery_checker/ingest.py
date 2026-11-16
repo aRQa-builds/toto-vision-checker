@@ -236,7 +236,7 @@ def run(game: str, data_dir: Path, draw_no: Optional[int] = None, catch_up: bool
     if draw_no is not None and already_stored(game, draw_no, data_dir):
         print(f"[{game}] draw {draw_no} already stored; no request made")
         return 0
-    if draw_no is None and stored_for_date(game, today_sgt(), data_dir):
+    if draw_no is None and stored_for_date(game, today_sgt(), data_dir) and not holes:
         print(f"[{game}] today's draw already stored; no request made")
         return 0
 
