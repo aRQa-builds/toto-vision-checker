@@ -197,7 +197,20 @@ def latest_stored(game: str, data_dir: Path) -> Optional[int]:
 
 def missing_draws(game: str, data_dir: Path) -> list[int]:
     """Draw numbers missing between the lowest and highest stored draw, ascending (P2-07 gap catch-up)."""
-    raise NotImplementedError("P2-07: see specs/p2-07-gap-catchup.md")
+    folder = data_dir / "draws" / game
+    if not folder.exists():
+        return []
+    stems = [p.stem for p in folder.glob("*.json") if p.stem.isdigit()]
+    if not stems:
+        return []
+    stored_nums = sorted([int(s) for s in stems])
+    lowest = stored_nums[0]
+    highest = stored_nums[-1]
+    holes = []
+    for n in range(lowest, highest + 1):
+        if n not in stored_nums:
+            holes.append(n)
+    return holes
 
 
 def next_fourd_draw(data_dir: Path) -> int:
@@ -216,7 +229,8 @@ def yesterday_sgt() -> str:
 
 
 def run(game: str, data_dir: Path, draw_no: Optional[int] = None, catch_up: bool = False) -> int:
-    if catch_up and stored_for_date(game, yesterday_sgt(), data_dir):
+    holes = missing_draws(game, data_dir) if game == "toto" and catch_up else []
+    if catch_up and not holes and stored_for_date(game, yesterday_sgt(), data_dir):
         print(f"[{game}] catch-up: yesterday's draw already stored, no special draw expected; no request made")
         return 0
     if draw_no is not None and already_stored(game, draw_no, data_dir):
@@ -225,9 +239,13 @@ def run(game: str, data_dir: Path, draw_no: Optional[int] = None, catch_up: bool
     if draw_no is None and stored_for_date(game, today_sgt(), data_dir):
         print(f"[{game}] today's draw already stored; no request made")
         return 0
+
     want = draw_no
     if game == "4d" and want is None:
         want = next_fourd_draw(data_dir)
+    # P2-07: TOTO catch-up with holes asks for the lowest missing draw number.
+    if holes:
+        want = holes[0]
     try:
         html, meta = fetch(game, want)
     except IngestDisabled as e:
