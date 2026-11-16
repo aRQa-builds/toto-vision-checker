@@ -372,3 +372,25 @@ def test_gap_fill_page_without_results_stores_nothing(monkeypatch, tmp_path, cap
     assert seen == [ingest.official_url("toto", 4233)]
     assert not (tmp_path / "draws" / "toto" / "4233.json").exists()
     assert "PARSE FAILED" in capsys.readouterr().err
+
+
+def test_gap_fill_runs_even_when_todays_draw_is_stored(monkeypatch, tmp_path):
+    """Special Friday: the 21:45 run stored today's draw, but an older hole is still open.
+    The 22:00 catch-up must still go for the lowest hole by number."""
+    _stored_toto(tmp_path, 4231, "2026-10-29")
+    _stored_toto(tmp_path, 4233, "2026-11-13")              # stored today (Fri); 4232 is missing
+    _on(monkeypatch, "2026-11-13")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 0
+    assert seen == [ingest.official_url("toto", 4232)]
+
+
+def test_todays_draw_stored_still_skips_when_no_hole(monkeypatch, tmp_path, capsys):
+    _stored_toto(tmp_path, 4232, "2026-11-05")
+    _stored_toto(tmp_path, 4233, "2026-11-13")
+    _on(monkeypatch, "2026-11-13")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 0
+    assert seen == []
