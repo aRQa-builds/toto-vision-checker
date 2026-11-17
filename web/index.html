@@ -305,18 +305,18 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
         x: r + Math.random() * Math.max(1, W - 2 * r), y: -r - i * 78 - Math.random() * 50,
         vx: (Math.random() - .5) * 240, vy: 40 + Math.random() * 120, a: Math.random() * 6.28, w: 0, pop: -1});
     }
-    var G = 1450, REST = 0.74, POP_AT = 3900, POP_LEN = 1700, lastPop = 0, END_AT = 4600, popped = false, done = false;
+    var G = 1450, REST = 0.74, POP_AT = 3900, POP_LEN = 1700, lastPop = 0, tNow = 0, END_AT = 4600, popped = false, done = false;
     function startPop(now){
       if (popped) return; popped = true; el.classList.add("out");
       var base = now - t0; var order = balls.slice().sort(function(){ return Math.random() - .5; }), gi = 0, at = 0;       // two or three at a time
       while (gi < order.length){ var grp = 2 + Math.floor(Math.random() * 2);
-        for (var u = 0; u < grp && gi < order.length; u++, gi++){ var pb = order[gi]; pb.pop = base + at + Math.random() * 40; pb.splat = makeSplat(pb); pb.said = false; }
-        at += 150 + Math.random() * 60; }
+        for (var u = 0; u < grp && gi < order.length; u++, gi++){ var pb = order[gi]; pb.pop = base + at + Math.random() * 15; pb.splat = makeSplat(pb); pb.said = false; }
+        at += 70 + Math.random() * 40; }
       lastPop = base + at; POP_AT = base;
     }
     function step(dt){
       balls.forEach(function(b){
-        if (b.pop >= 0) return;
+        if (b.pop >= 0 && tNow >= b.pop) return;
         b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
         if (b.x < b.r){ b.x = b.r; b.vx = Math.abs(b.vx) * REST; }
         if (b.x > W - b.r){ b.x = W - b.r; b.vx = -Math.abs(b.vx) * REST; }
@@ -326,7 +326,7 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
         b.w = b.vx / b.r; b.a += b.w * dt;
       });
       for (var i = 0; i < balls.length; i++) for (var j = i + 1; j < balls.length; j++){
-        var p = balls[i], q = balls[j]; if (p.pop >= 0 || q.pop >= 0) continue;
+        var p = balls[i], q = balls[j]; if ((p.pop >= 0 && tNow >= p.pop) || (q.pop >= 0 && tNow >= q.pop)) continue;
         var dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy), m = p.r + q.r;
         if (d > 0 && d < m){
           var nx = dx / d, ny = dy / d, ov = (m - d) / 2;
@@ -395,11 +395,20 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
       g.beginPath(); g.ellipse(b.x - cr * .3, cy - cr * .35, cr * .3, cr * .16, -.6, 0, 6.2832); g.fill();
       g.restore();
     }
+    function shock(b){                              // a pop shoves the balls around it
+      var reach = b.r * 6;
+      balls.forEach(function(o){
+        if (o === b || (o.pop >= 0 && tNow >= o.pop)) return;
+        var dx = o.x - b.x, dy = o.y - b.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+        if (d > reach) return; var k = 1 - d / reach;
+        o.vx += dx / d * 560 * k; o.vy += dy / d * 560 * k - 300 * k;
+      });
+    }
     function finish(){ if (done) return; done = true; removeEventListener("resize", size);
       el.classList.add("gone"); setTimeout(function(){ el.remove(); }, 450); }
     function frame(now){
       if (done) return;
-      var dt = Math.min(.033, (now - last) / 1000); last = now; var t = now - t0;
+      var dt = Math.min(.033, (now - last) / 1000); last = now; var t = now - t0; tNow = t;
       if (t > 500) el.classList.add("in");
       if (!popped && t >= POP_AT) startPop(now);
       g.clearRect(0, 0, W, H);
@@ -408,12 +417,12 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
         for (var k = 0; k < 3; k++){ var b = balls[Math.floor(Math.random() * balls.length)];
           b.vy = -(620 + Math.random() * 560); b.vx += (Math.random() - .5) * 340; }
       }
-      if (!popped) step(dt);
-      if (!popped) balls.forEach(floorShadow);
+      step(dt);
+      balls.forEach(function(b){ if (!(popped && t >= b.pop)) floorShadow(b); });
       balls.forEach(function(b){
         if (b.pop < 0){ ball(b); return; }
         var age = t - b.pop;
-        if (age < 0) ball(b); else if (age < POP_LEN){ if (!b.said){ b.said = true; popSound(); } bubblePop(b, age); }
+        if (age < 0) ball(b); else if (age < POP_LEN){ if (!b.said){ b.said = true; popSound(); shock(b); } bubblePop(b, age); }
       });
       if (popped && t > lastPop + POP_LEN) finish();
       if (!popped && t > END_AT + 700) return finish();
