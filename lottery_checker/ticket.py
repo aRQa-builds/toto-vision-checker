@@ -16,12 +16,13 @@ matchers. The UI formats; this module does not.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Iterable, Optional, Sequence, Union
 
 from . import fourd, toto
 from .claim import claim_by, claim_hint, days_left
+from .units import unit_share, unit_stake
 
 Entry = Union[toto.TotoEntry, fourd.FourDEntry]
 Draw = Union[toto.TotoDraw, fourd.FourDDraw]
@@ -176,7 +177,45 @@ def check_ticket(entries: Sequence[Entry], draws: Iterable[DrawRef]) -> TicketRe
 
 
 def scale_to_units(result: TicketResult, kind: str, a: int, b: int) -> TicketResult:
-    raise NotImplementedError
+    """Turn a whole-entry result into the holder's share.
+
+    Applies unit scaling to each line's stake and won amount using the
+    provided (kind, a, b) parameters. Returns a new TicketResult with
+    scaled lines and updated totals; never modifies the input.
+    """
+    if not isinstance(result, TicketResult):
+        raise TypeError("result must be a TicketResult")
+
+    new_lines = []
+    for ln in result.lines:
+        # Apply scaling to stake and won
+        new_stake = unit_stake(ln.stake, kind, a, b)
+        new_won = unit_share(ln.won, kind, a, b)
+        
+        # Create a new Line with updated values, keeping everything else
+        new_ln = replace(
+            ln,
+            stake=new_stake,
+            won=new_won
+        )
+        new_lines.append(new_ln)
+
+    # Calculate new totals
+    total_stake = sum(ln.stake for ln in new_lines)
+    
+    # total_won is None if any line's won is None, else the sum of won values
+    if any(ln.won is None for ln in new_lines):
+        total_won = None
+    else:
+        total_won = sum(ln.won for ln in new_lines)
+
+    return TicketResult(
+        lines=new_lines,
+        total_stake=total_stake,
+        total_won=total_won,
+        draw_dates=result.draw_dates,
+        units=(kind, a, b)
+    )
 
 
 # end of ticket.py
