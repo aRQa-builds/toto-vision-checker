@@ -31,6 +31,7 @@ from .ingest import ATTRIBUTION, official_url
 from .ticket import Line, TicketResult
 
 CENT = 0.005   # tolerance for comparing dollar amounts held as floats
+UNIT_PRICE_TOL = 0.10   # tolerance for comparing unit prices
 
 
 def money(v: float) -> str:
@@ -77,6 +78,7 @@ class Reveal:
     needs_review: bool          # True sends the user back to confirm-and-correct
     official_links: list[tuple[int, str]] = field(default_factory=list)
     attribution: str = ATTRIBUTION
+    units_text: Optional[str] = None
 
 
 def _line_view(ln: Line) -> LineView:
@@ -101,7 +103,9 @@ def stake_check(result: TicketResult, printed_price: Optional[float]) -> StakeCh
         return StakeCheck("not_checked", computed, None,
                           f"We count {money(computed)} staked. "
                           "We could not read the ticket's PRICE line to check it.")
-    if abs(printed_price - computed) < CENT:
+    # Tolerance is CENT when units are unknown, else UNIT_PRICE_TOL
+    tol = CENT if result.units is None else UNIT_PRICE_TOL
+    if abs(printed_price - computed) < tol + 1e-9:
         return StakeCheck("match", computed, printed_price,
                           f"Stake {money(computed)} matches the ticket.")
     return StakeCheck("mismatch", computed, printed_price,
@@ -119,6 +123,12 @@ def build_reveal(result: TicketResult, printed_price: Optional[float] = None,
         raise ValueError(f"results_source must be 'official', 'user' or 'shared', got {results_source!r}")
     lines = [_line_view(ln) for ln in result.lines]
     stake = stake_check(result, printed_price)
+
+    # Build units_text if result.units is a tuple (kind, a, b)
+    units_text: Optional[str] = None
+    if isinstance(result.units, tuple) and len(result.units) == 3:
+        kind, a, b = result.units
+        units_text = f"Your share: {a} of {b} units ({'Group TOTO' if kind == 'group' else 'iTOTO'})"
 
     if result.pending:
         known = sum(ln.won or 0 for ln in result.lines if not ln.pending)
@@ -154,11 +164,16 @@ def build_reveal(result: TicketResult, printed_price: Optional[float] = None,
             links.append((ln.draw_no, official_url(ln.game, ln.draw_no)))
 
     rv = Reveal(state, headline, subline, lines, stake, claim,
-                needs_review=stake.state == "mismatch", official_links=links)
+                needs_review=stake.state == "mismatch", official_links=links, units_text=units_text)
     if results_source == "user":
         _as_user_entered(rv, result)
     elif results_source == "shared":
         rv.attribution = SHARED_ATTRIBUTION
+
+    # Append units_text to subline if present (applies to all sources including user-entered)
+    if units_text:
+        rv.subline = f"{units_text}. {rv.subline}"
+
     return rv
 
 
