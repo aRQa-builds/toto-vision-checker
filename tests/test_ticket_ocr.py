@@ -642,3 +642,52 @@ def test_p_page_processed_photo_rows_read_the_whole_ticket(key):
     assert d.draw_numbers == draws and d.printed_price == price
     got = [e.numbers if game == "toto" else (e.kind, e.number) for e in d.entries]
     assert got == bets
+
+
+# P6-15-E: Group TOTO and iTOTO from synthetic rows shaped like the three official specimens. No
+# real unit ticket photo exists and none can be scraped. Before this slice the header and the unit
+# line were dropped, so a unit ticket read as an ordinary one and showed the whole-entry prize.
+_GROUP = ["SINGAPORE POOLS", "GROUP TOTO - ORDINARY", "A. 01 02 03 04 05 06", "B. 07 08 09 10 11 12",
+          "DRAW:", "THU 01/10/26 4220/26", "MON 05/10/26 4221/26", "PRICE: $1.30", "UNIT NUMBER: 1/3",
+          "23/09/26 01:51 PM", "209-38781441-093108"]
+_ITOTO = ["ITOTO - SYSTEM 12", "A. 02 05 15 19 20 27", "30 33 38 41 44 49", "DRAW:",
+          "FRI 27/02/26 4160/26", "PRICE: $33.00", "NUMBER OF UNITS PURCHASED: 1 of 28"]
+
+
+def test_e_group_toto_header_and_unit_line_are_kept():
+    r = read_rows(_GROUP)
+    d = r.draft
+    assert "GROUP TOTO - ORDINARY" in r.text and "UNIT NUMBER: 1/3" in r.text
+    assert (d.units, d.unit_kind, d.ready) == ((1, 3), "group", True)
+    assert [e.numbers for e in d.entries] == [(1, 2, 3, 4, 5, 6), (7, 8, 9, 10, 11, 12)]
+    assert d.printed_price == 1.30 and not d.warnings          # $4 whole / 3 units, within 10 cents
+
+
+def test_e_itoto_system_12_wrapped_board_and_units():
+    d = read_rows(_ITOTO).draft
+    assert (d.units, d.unit_kind, d.ready) == ((1, 28), "itoto", True)
+    assert len(d.entries) == 1 and len(d.entries[0].numbers) == 12 and not d.warnings
+
+
+def test_e_unit_line_split_over_two_rows_or_spaced():
+    rows = [r for r in _ITOTO[:-1]] + ["NUMBER OF UNITS PURCHASED:", "1 of 28"]
+    assert read_rows(rows).draft.units == (1, 28)
+    rows = [r.replace("1/3", "1 / 3") for r in _GROUP]
+    assert read_rows(rows).draft.units == (1, 3)
+
+
+def test_e_unit_line_is_never_read_as_board_numbers():
+    rows = _ITOTO[:3] + ["NUMBER OF UNITS PURCHASED: 1 of 28"] + _ITOTO[3:6]
+    d = read_rows(rows).draft
+    assert d.units == (1, 28) and len(d.entries) == 1 and len(d.entries[0].numbers) == 12
+
+
+def test_e_unit_header_without_a_readable_unit_line_is_not_ready():
+    d = read_rows(_ITOTO[:-1]).draft
+    assert d.units == (0, 0) and not d.ready and d.warnings
+
+
+def test_e_unit_line_without_the_header_still_marks_a_unit_ticket():
+    rows = ["TOTO", "ORDINARY"] + _GROUP[2:4] + _GROUP[4:9]
+    d = read_rows(rows).draft
+    assert d.units == (1, 3) and d.unit_kind == "group" and d.ready
