@@ -87,8 +87,9 @@ def journey_4d():
     print(f"   1st {d.first}   2nd {d.second}   3rd {d.third}")
     print(f"   Starter      {' '.join(d.starter)}")
     print(f"   Consolation  {' '.join(d.consolation)}")
-    gap("P4-10 screenshot OCR not built. Tonight's scheduled capture (P2-03) "
-        "will cover the auto path for this draw onward.")
+    gap("This step reads a stored fixture, not a live screenshot. The live "
+        "paths are the screenshot reader (P4-10, built) and the scheduled "
+        "capture (P2-03).")
 
     head(6, "Reveal  (through the P3-05 aggregator)")
     result = check_ticket(entries, [DrawRef.from_parsed(res)])
