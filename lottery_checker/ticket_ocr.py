@@ -73,6 +73,12 @@ _SPACED_DATE = re.compile(r"\b(\d{1,2})\s*/\s*(\d{1,2})\s*/\s*(\d{2}\w?)")
 # digits with a run of watermark letters before or after (a lone leading R is a 4D Roll, kept)
 _GLUED = re.compile(r"^(?:[A-Za-z]{2,9}|[A-QS-Za-qs-z])?([\dOoIl]{1,4}(?:/[\dOoIl]{2,4}){0,2})(?:[A-Za-z]{1,9})?$")
 
+# Unit header and line patterns for TOTO photos
+_UNIT_HEAD = re.compile(r"\b(GROUP\s+TOTO|ITOTO)\b", re.I)
+_UNIT_GROUP = re.compile(r"\bUNIT\s+NUMBER\s*:?\s*(\d+)\s*/\s*(\d+)", re.I)
+_UNIT_ITOTO = re.compile(r"\bUNITS\s+PURCHASED\s*:?\s*(\d+)\s+OF\s+(\d+)", re.I)
+_UNIT_OPEN = re.compile(r"\b(?:UNIT\s+NUMBER|UNITS\s+PURCHASED)\s*:?\s*$", re.I)
+
 
 @dataclass
 class PhotoRead:
@@ -202,6 +208,61 @@ def read_ocr(result) -> PhotoRead:
 
 def _toto_text(rows: list[str], notes: list[str]) -> str:
     head_i, kind, size = None, "ORDINARY", 6
+    
+    # Step 1: Merge rows matching _UNIT_OPEN with the next row
+    merged_rows = []
+    i = 0
+    while i < len(rows):
+        if _UNIT_OPEN.search(rows[i]):
+            # Join with next row (single space)
+            if i + 1 < len(rows):
+                merged_rows.append(f"{rows[i]} {rows[i+1]}")
+                i += 2
+            else:
+                merged_rows.append(rows[i])
+                i += 1
+        else:
+            merged_rows.append(rows[i])
+            i += 1
+    
+    rows = merged_rows
+
+    # Step 2: Extract unit_head and unit_line
+    unit_head = None
+    unit_line = None
+    
+    # Find first _UNIT_HEAD match
+    for r in rows:
+        m = _UNIT_HEAD.search(r)
+        if m:
+            unit_head = m.group(1).upper()
+            break
+    
+    # Find unit_line based on priority: _UNIT_GROUP then _UNIT_ITOTO
+    for r in rows:
+        m = _UNIT_GROUP.search(r)
+        if m:
+            k, n = m.group(1), m.group(2)
+            unit_line = f"UNIT NUMBER: {k}/{n}"
+            break
+    
+    if unit_line is None:
+        for r in rows:
+            m = _UNIT_ITOTO.search(r)
+            if m:
+                u, N = m.group(1), m.group(2)
+                unit_line = f"NUMBER OF UNITS PURCHASED: {u} of {N}"
+                break
+    
+    # Step 3: Drop rows matching _UNIT_GROUP or _UNIT_ITOTO from rows
+    filtered_rows = []
+    for r in rows:
+        if not (_UNIT_GROUP.search(r) or _UNIT_ITOTO.search(r)):
+            filtered_rows.append(r)
+    rows = filtered_rows
+
+    # Continue with existing logic using the modified rows
+    head_i, kind, size = None, "ORDINARY", 6
     for i, r in enumerate(rows):
         m = _TOTO_HEAD.search(r)
         if m:
@@ -217,6 +278,7 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
                     kind, size = None, None
                     notes.append(f"Bet type read as SYSTEM {n}, which doesn't exist; the bet type was taken from the count of numbers.")
             break
+    
     price_i = next((i for i, r in enumerate(rows) if _PRICE.search(r)), None)
     draw_i = next((i for i, r in enumerate(rows) if _DRAW.search(r)), None)
     if head_i is None:
@@ -258,7 +320,8 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
                 cur.append(f"{int(tok):02d}")
     close()
 
-    out = ["TOTO"] + ([kind] if kind else [])
+    prefix = f"{'GROUP TOTO' if unit_head and unit_head.startswith('GROUP') else 'ITOTO'} - " if unit_head else ""
+    out = ["TOTO"] + ([prefix + kind] if kind else [])
     used = {b[0] for b in boards if b[0]}
     spare = iter(c for c in "ABCDEFGHIJ" if c not in used)
     for letter, nums, qp in boards:
@@ -282,6 +345,11 @@ def _toto_text(rows: list[str], notes: list[str]) -> str:
     if price_i is not None:
         p = _PRICE.search(rows[price_i]).group(1)
         out.append(f"PRICE: ${p}")
+    
+    # Append unit_line just before the existing "if len(boards) > 10:" note check
+    if unit_line:
+        out.append(unit_line)
+    
     if len(boards) > 10:
         notes.append("More than 10 boards were read; check the photo.")
     return "\n".join(out)
