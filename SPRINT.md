@@ -282,3 +282,6 @@ LEAD DIRECT +1 (splash). LOCAL 6 · L1 1 · L2 0 unchanged. Hand lessons landed:
 - `SCOPE`: no "tap for sound" memory between visits; browsers cannot autoplay sound.
 
 2026-11-17 | delegable: 0 of 1 | reasons: needs-judgement x1 | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0
+
+### Item 4 note (2026-11-17)
+- Owner offered the live 4D ticket for draw 5553 for item 4. Not usable: 5553 is stored (25 Oct) and 5550-5562 are contiguous, so catch-up finds no gap. Item 4 still waits on the 20 Nov log. Ticket could separately prove the 4D check path (SCOPE, not run).
