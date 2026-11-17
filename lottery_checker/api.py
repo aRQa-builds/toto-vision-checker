@@ -66,6 +66,7 @@ from . import diag, limits, owner, results_db, shared, stats
 from .store import load_ref
 from .ticket import DrawRef, TicketError
 from .ticket_entry import TicketDraft, parse_ticket
+from .units import unit_stake
 
 VERSION = "0.1.0"
 MAX_TICKET = 4000
@@ -256,6 +257,9 @@ def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) 
         try:
             from .ticket import check_ticket
             result = check_ticket(d.entries, refs)
+            if d.units is not None:
+                from .ticket import scale_to_units
+                result = scale_to_units(result, d.unit_kind, *d.units)
         except TicketError as e:
             raise HTTPException(422, {"problems": [str(e)]}) from None
         vals = set(sources.values())
@@ -268,7 +272,7 @@ def create_app(data_dir: Optional[Path] = None, recognize=None, send_link=None) 
             "boards": [_boards(d, ref) for ref in refs],
             "reveal": {
                 "state": rv.state, "headline": rv.headline, "subline": rv.subline,
-                "claim": rv.claim_text, "needs_review": rv.needs_review,
+                "claim": rv.claim_text, "needs_review": rv.needs_review, "units_text": rv.units_text,
                 "stake": {"state": rv.stake.state, "message": rv.stake.message},
                 "attribution": rv.attribution,
                 "lines": [vars(lv) for lv in rv.lines],
@@ -578,9 +582,13 @@ def _ticket_view(d: TicketDraft, data_dir: Path) -> dict:
                       # "void": other users' screenshots disagree, so this draw needs the user's own
                       "shared": shared.status(d.game, n, data_dir) if d.game and src != "captured" else None,
                       "official_url": official_url(d.game, n) if d.game else None})
+    unit = d.units is not None and d.supported and bool(d.entries)
     return {
         "game": d.game, "ready": d.ready, "entries": entries, "draws": draws,
         "printed_price": d.printed_price, "stake": d.stake() if d.entries else 0,
+        # P6-15: a Group TOTO / iTOTO ticket prints the price of the holder's units only
+        "units": {"kind": d.unit_kind, "a": d.units[0], "b": d.units[1]} if unit else None,
+        "unit_stake": unit_stake(d.stake(), d.unit_kind, *d.units) if unit else None,
         "quick_pick": d.quick_pick, "problems": d.problems() if not d.ready else [],
         "errors": [{"line": e.line_no, "message": e.message} for e in d.errors],
         "warnings": d.warnings,

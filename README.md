@@ -88,6 +88,6 @@ Tools
 ## Open assumptions and gaps
 - iBet with two different permutations winning in one draw pays each match (rules reference, open item 7).
 - No 4D rule version before draw 5269; add one before any backfill (P2-04).
-- Group TOTO / iTOTO unit tickets are recognised but refused: payout per unit and rounding not worked out (P6-15).
+- Group TOTO / iTOTO unit tickets show the holder's share (entry win / n, or win x u / N, not rounded). Built from specimen text only; no real photo has been tested (P6-15).
 - Real tickets seen so far: TOTO Ordinary, System 7, two-draw TOTO, 4D Ordinary, 4D Roll, 4D iBet. System 8-11 and TOTO System Roll have no real photo and are tested with synthetic rows in the System 7 shape, so their real layouts are assumed (P0-02, closed by owner decision).
 - Screenshot reading is tested on OCR-shaped text; real Vision output order to be checked once a key exists.

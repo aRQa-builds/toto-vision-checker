@@ -460,3 +460,29 @@ def test_screenshots_of_other_draws_are_kept_for_others(data, monkeypatch):
         assert r.status_code == 422                                      # nothing for this ticket...
     assert sh.status("toto", 4228, data) == "agreed"                     # ...but 4228 now helps others
 
+
+
+# ---------------- P6-15-F: Group TOTO / iTOTO unit tickets ----------------
+
+GROUP_TICKET = "TOTO\nGROUP TOTO - ORDINARY\nA. 02 15 19 20 27 05\nDRAW:\nMON 19/10/26 4227/26\nPRICE: $0.50\nUNIT NUMBER: 1/2"
+
+
+def test_ticket_view_carries_the_units_and_the_unit_stake(client):
+    t = client.post("/api/ticket", json={"text": GROUP_TICKET}).json()
+    assert t["ready"] and t["units"] == {"kind": "group", "a": 1, "b": 2}
+    assert t["stake"] == 1 and t["unit_stake"] == 0.5 and t["warnings"] == []
+    o = client.post("/api/ticket", json={"text": TOTO_TICKET}).json()
+    assert o["units"] is None and o["unit_stake"] is None
+
+
+def test_check_returns_the_share_and_its_wording(client):
+    r = client.post("/api/check", json={"text": GROUP_TICKET}).json()
+    assert r["status"] == "ok" and r["reveal"]["headline"] == "You won S$34,256.50"   # G2 68,513 / 2
+    assert r["reveal"]["units_text"] == "Your share: 1 of 2 units (Group TOTO)"
+    assert r["reveal"]["subline"].startswith(r["reveal"]["units_text"])
+    assert r["totals"]["stake"] == 0.5 and r["reveal"]["stake"]["state"] == "match"
+
+
+def test_unit_header_without_a_unit_line_is_refused_with_the_reason(client):
+    r = client.post("/api/check", json={"text": GROUP_TICKET.replace("\nUNIT NUMBER: 1/2", "")})
+    assert r.status_code == 422 and any("unit line" in p for p in r.json()["detail"]["problems"])

@@ -916,14 +916,17 @@ function boardLabel(e, i){
 }
 
 function stakeBox(){
-  const t = S.ticket, n = t.entries.length, d = t.draws.length;
+  const t = S.ticket, n = t.entries.length, d = t.draws.length, u = t.units;
+  const mine = u ? t.unit_stake : t.stake, tol = u ? 0.10 : 0.005;
+  const calc = u
+    ? [`${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `, h("b", {}, money(t.stake)),
+       `, your ${u.a} of ${u.b} units = `, h("b", {}, money(mine))]
+    : [`${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `, h("b", {}, money(t.stake))];
   if (t.printed_price === null || t.printed_price === undefined){
-    return h("div", {class: "card small"}, `${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `,
-      h("b", {}, money(t.stake)), ". No PRICE line read, so we can't cross-check it.");
+    return h("div", {class: "card small"}, ...calc, ". No PRICE line read, so we can't cross-check it.");
   }
-  const ok = Math.abs(t.printed_price - t.stake) < 0.005;
-  return h("div", {class: "card small " + (ok ? "okbox" : "warn")},
-    `${n} board${n > 1 ? "s" : ""} × ${d} draw${d > 1 ? "s" : ""} = `, h("b", {}, money(t.stake)),
+  const ok = Math.abs(t.printed_price - mine) < tol + 1e-9;
+  return h("div", {class: "card small " + (ok ? "okbox" : "warn")}, ...calc,
     ", printed price ", h("b", {}, money(t.printed_price)), ok ? ". They match." : ". They don't match, so check the numbers.");
 }
 

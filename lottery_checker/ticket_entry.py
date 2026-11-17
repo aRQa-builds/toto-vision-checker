@@ -26,8 +26,8 @@ what was accepted and what pays), "n PERMUTATIONS" (checked against ours).
 
 Every problem is reported per line in `errors` so the confirm screen can
 point at it; nothing is silently dropped. Group TOTO and iTOTO unit tickets
-are recognised but not yet priced per unit, so they are marked unsupported
-rather than shown with a whole-entry amount.
+are priced as the holder's share (stake and prize scaled by the units); a unit
+header with no valid unit line is marked unsupported.
 """
 from __future__ import annotations
 

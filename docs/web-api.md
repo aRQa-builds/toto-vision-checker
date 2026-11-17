@@ -255,6 +255,10 @@ re-run `tools\setup-web.ps1`. Without them sign-in mail fails with a 503.
 - Grayskull off, asleep or rebooting = site down.
 - One person on two networks (wifi and mobile) counts as two people for shared results.
 - 4D ticket photo reading is untested on a real ticket (test ticket 05 only).
-- Group TOTO / iTOTO unit tickets are refused with a message (payout per unit not
-  worked out yet).
+- Group TOTO / iTOTO unit tickets are priced as the holder's share: `/api/ticket` adds
+  `units` (`{kind, a, b}`, else null) and `unit_stake`; `/api/check` returns the share
+  (entry win / n, or win x u / N, unrounded, shown via the money rule) and `reveal.units_text`.
+  The PRICE cross-check uses the unit stake and warns above S$0.10. No real unit-ticket
+  photo exists; reading is tested on specimen-shaped text only. A unit header with no
+  unit line is refused.
 - Fonts load from Google Fonts; without them the page falls back to system fonts.
