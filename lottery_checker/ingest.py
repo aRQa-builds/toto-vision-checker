@@ -154,6 +154,10 @@ def store(game: str, html: str, data_dir: Path) -> list[dict]:
         json_p = data_dir / "draws" / game / f"{n}.json"
         raw_p.parent.mkdir(parents=True, exist_ok=True)
         json_p.parent.mkdir(parents=True, exist_ok=True)
+        # P2-07-I: if the draw is already on file, append to out and continue without writing.
+        if json_p.exists():
+            out.append(rec)
+            continue
         raw_p.write_text(html, encoding="utf-8")
         json_p.write_text(json.dumps(rec, indent=2), encoding="utf-8")
         out.append(rec)
