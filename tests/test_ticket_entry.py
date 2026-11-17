@@ -99,11 +99,55 @@ def test_toto_board_errors(board, msg):
     assert len(d.errors) == 1 and msg in d.errors[0].message and d.errors[0].line_no == 2
 
 
-def test_itoto_is_recognised_but_not_priced():
-    d = parse_ticket("TOTO\nITOTO - SYSTEM 12\nA. 02 05 15 19 20 27\n30 33 38 41 44 49\n"
-                     "DRAW:\nFRI 27/02/26 4160/26\nPRICE: $33.00\nNUMBER OF UNITS PURCHASED: 1 of 28")
-    assert d.units == (1, 28) and not d.supported and not d.ready
-    assert any("not supported yet" in p for p in d.problems())
+ITOTO = ("TOTO\nITOTO - SYSTEM 12\nA. 02 05 15 19 20 27\n30 33 38 41 44 49\n"
+         "DRAW:\nFRI 27/02/26 4160/26\nPRICE: $33.00\nNUMBER OF UNITS PURCHASED: 1 of 28")
+GROUP_6x4 = ("TOTO\nGROUP TOTO - ORDINARY\n" + "".join(f"{c}. 01 02 03 04 05 {6 + i:02d}\n" for i, c in enumerate("ABCDEF"))
+             + "DRAW:\nTHU 01/10/26 4220/26\nMON 05/10/26 4221/26\nTHU 08/10/26 4222/26\nMON 12/10/26 4223/26\n"
+             "PRICE: $8.00\nUNIT NUMBER: 1/3")
+
+
+def test_itoto_and_group_are_supported_now():
+    d = parse_ticket(ITOTO)
+    assert d.units == (1, 28) and d.unit_kind == "itoto" and d.supported and d.ready and not d.problems()
+    g = parse_ticket(GROUP_6x4)
+    assert g.units == (1, 3) and g.unit_kind == "group" and g.ready and not g.problems()
+
+
+def test_unit_price_is_compared_per_unit_and_matches():
+    assert not parse_ticket(ITOTO).warnings          # 924 x 1 / 28 = 33.00
+    assert not parse_ticket(GROUP_6x4).warnings      # 24 / 3 = 8.00
+
+
+def test_unit_price_tolerance_is_ten_cents():
+    assert not parse_ticket(GROUP_6x4.replace("$8.00", "$8.10")).warnings
+    w = parse_ticket(GROUP_6x4.replace("$8.00", "$9.00")).warnings
+    assert any("PRICE says S$9.00 but" in x and "S$8.00" in x for x in w)
+
+
+def test_unit_header_without_unit_line_is_not_ready():
+    d = parse_ticket(GROUP_6x4.replace("\nUNIT NUMBER: 1/3", ""))
+    assert d.units == (0, 0) and not d.ready
+    assert any("UNIT NUMBER" in w for w in d.warnings) and any("unit" in p.lower() for p in d.problems())
+
+
+def test_impossible_unit_counts_are_not_ready():
+    for bad in ("UNIT NUMBER: 4/3", "UNIT NUMBER: 0/3"):
+        d = parse_ticket(GROUP_6x4.replace("UNIT NUMBER: 1/3", bad))
+        assert not d.ready and any("unit" in p.lower() for p in d.problems())
+
+
+def test_group_ticket_check_returns_the_holders_share():
+    d = parse_ticket("TOTO\nGROUP TOTO - ORDINARY\nA. 02 15 19 20 27 05\nDRAW:\nMON 19/10/26 4227/26\n"
+                     "PRICE: $0.50\nUNIT NUMBER: 1/2")
+    r = d.check(ON_FILE.get)
+    assert r.units == ("group", 1, 2) and r.total_stake == 0.5 and r.total_won == 68513 / 2
+    assert not d.warnings
+
+
+def test_ordinary_ticket_result_has_no_units():
+    d = parse_ticket("TOTO\nORDINARY\nA. 02 15 19 20 27 05\nDRAW:\nMON 19/10/26 4227/26\nPRICE: $1.00")
+    r = d.check(ON_FILE.get)
+    assert r.units is None and d.unit_kind is None and r.total_won == 68513
 
 
 def test_price_mismatch_warns():
