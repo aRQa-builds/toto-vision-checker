@@ -394,3 +394,25 @@ def test_todays_draw_stored_still_skips_when_no_hole(monkeypatch, tmp_path, caps
     monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
     assert ingest.run("toto", tmp_path, catch_up=True) == 0
     assert seen == []
+
+
+# ---------- P2-07-I: a stored draw is never re-saved (spec p2-07-gap-resave) ----------
+
+def test_gap_fill_does_not_rewrite_a_draw_already_stored(monkeypatch, tmp_path):
+    """The fake page carries draw 4068, which is already on file. A gap request for 4067
+    answered with that page must leave 4068's JSON and raw page exactly as they were."""
+    _stored_toto(tmp_path, 4066, "2025-04-03")
+    _stored_toto(tmp_path, 4070, "2025-04-14")
+    folder = tmp_path / "draws" / "toto"
+    (folder / "4068.json").write_text(json.dumps({"draw_no": 4068, "draw_date": "2025-04-07",
+                                                  "captured_at": "OLD"}))
+    raw = tmp_path / "raw" / "toto"
+    raw.mkdir(parents=True)
+    (raw / "4068.html").write_text("OLD RAW", encoding="utf-8")
+    _on(monkeypatch, "2025-04-18")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(TOTO_HTML, seen))
+    assert ingest.run("toto", tmp_path, catch_up=True) == 0
+    assert seen == [ingest.official_url("toto", 4067)]
+    assert json.loads((folder / "4068.json").read_text())["captured_at"] == "OLD"
+    assert (raw / "4068.html").read_text(encoding="utf-8") == "OLD RAW"
