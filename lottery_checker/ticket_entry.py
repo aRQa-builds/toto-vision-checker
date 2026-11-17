@@ -37,7 +37,8 @@ from datetime import date
 from typing import Callable, Optional, Union
 
 from . import fourd, toto
-from .ticket import DrawRef, TicketResult, check_ticket
+from .ticket import DrawRef, TicketResult, check_ticket, scale_to_units
+from .units import unit_stake
 
 Entry = Union[toto.TotoEntry, fourd.FourDEntry]
 
@@ -71,6 +72,7 @@ class TicketDraft:
     draws: list[tuple[int, Optional[date]]] = field(default_factory=list)
     printed_price: Optional[float] = None
     units: Optional[tuple[int, int]] = None                  # Group TOTO 3/3, iTOTO 1 of 28
+    unit_kind: Optional[str] = None                          # "group" or "itoto"
     quick_pick: bool = False
     errors: list[LineError] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
@@ -81,7 +83,13 @@ class TicketDraft:
 
     @property
     def supported(self) -> bool:
-        return self.units is None
+        if self.units is None:
+            return True
+        # Supported only when unit_kind is set and 1 <= a <= b for units == (a, b)
+        if self.unit_kind is None:
+            return False
+        a, b = self.units
+        return 1 <= a <= b
 
     @property
     def ready(self) -> bool:
@@ -95,8 +103,7 @@ class TicketDraft:
         if not self.draws:
             out.append("No draw found. Add the DRAW line, e.g. \"THU 24/09/26 4220/26\" or \"draw 4220\".")
         if not self.supported:
-            out.append("Group TOTO and iTOTO unit tickets are not supported yet: "
-                       "the payout per unit is not worked out.")
+            out.append("Group TOTO or iTOTO ticket: the unit line is missing or not valid. Add it as printed, e.g. UNIT NUMBER: 1/3 or NUMBER OF UNITS PURCHASED: 1 of 28.")
         return out
 
     def stake(self) -> int:
@@ -116,7 +123,10 @@ class TicketDraft:
         if missing:
             raise LookupError(f"no result on file for draw(s) {missing}; "
                               "open the official page and add it")
-        return check_ticket(self.entries, refs)
+        result = check_ticket(self.entries, refs)
+        if self.units is not None:
+            return scale_to_units(result, self.unit_kind, *self.units)
+        return result
 
 
 # ---------------------------------------------------------------- parsing
@@ -151,6 +161,11 @@ def parse_ticket(text: str) -> TicketDraft:
         if m:
             k, n = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
             d.units = (int(k), int(n))
+            # Set unit_kind based on which group matched
+            if m.group(1):  # UNIT NUMBER k/n -> group
+                d.unit_kind = "group"
+            else:           # UNITS PURCHASED u of N -> itoto
+                d.unit_kind = "itoto"
             continue
         m = _PRICE.search(line)
         if m:
@@ -210,7 +225,10 @@ def parse_ticket(text: str) -> TicketDraft:
         d.warnings.append("Group TOTO or iTOTO ticket: add the UNIT NUMBER line too.")
     if d.printed_price is not None and d.ready:
         ours = d.stake()
-        if abs(ours - d.printed_price) > 0.005:
+        # For unit tickets, use tolerance 0.10; otherwise 0.005
+        if d.units is not None:
+            ours = unit_stake(d.stake(), d.unit_kind, *d.units)
+        if abs(ours - d.printed_price) > (0.10 if d.units is not None else 0.005):
             d.warnings.append(f"PRICE says S${d.printed_price:,.2f} but these bets come to "
                               f"S${ours:,.2f}. Check the amounts and the number of draws.")
     return d
