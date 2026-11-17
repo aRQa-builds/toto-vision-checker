@@ -7,13 +7,14 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - **Deploy**: toto.zenqi.cc LIVE since 22 Oct 2026 (Cloudflare Tunnel sakura-hud, served from Grayskull); capture runs on Grayskull (Win 11 64-bit, Task Scheduler).
 - **Home**: D:\SakuraHydra\HavenPalms\Toto_Vision_Checker (mirror: claude.ai project "Toto OCR Check").
 - **Remote**: https://github.com/aRQa-builds/toto-vision-checker (PUBLIC, `main`, since 2026-10-25). Ticket photos, captured Singapore Pools pages (`tests/fixtures/*.jpg`, `*.html`, `screens/`) and `data/` are git-ignored and stay local; never add them. Public repo: no secrets, no `.env`.
-- **Version**: v0.2 (matcher + capture + optional accounts, 558 pytest + 9 node tests).
+- **Version**: v0.2 (matcher + capture + optional accounts, 623 pytest + 9 node tests).
 
 ## Architecture Decisions
 - Toto Groups 1-4 priced only from published draw amounts; 5-7 fixed ($50/$25/$10), published value overrides (cascade).
 - 4D stakes: Roll ×10, System ×perms, iBet once (Singapore Pools bet slip page).
 - Results: after-draw capture of official page, 1 request + 1 retry, credited, "we do not own this data" (user's risk decision 2026-10-17). Screenshot/typing flow kept as fallback.
 - No iframe/CORS route: official page blocks framing.
+- Singapore Pools permission track DEFERRED by owner 2026-11-16 (P2-05 alias, P2-06 email, the permission, P2-04 backfill, paid tier/ads/Play). Do not chase or draft it until the owner reopens it. Still no money, no bulk backfill, no public stats while unpermitted.
 - Accounts (P4-04, optional): email magic link, server-side sessions, SQLite `data/accounts.db`; history = bets + outcome only, no serials/photos/ticket text, kept to 31 Dec of next year, user can delete. Sign-in mail via Cloudflare Email Service from login@zenqi.cc. Paid tier, ads, Play listing ON HOLD until permission.
 
 ## Key Patterns
@@ -32,7 +33,8 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - Python changes load at server start only. Restart the live web checker by ending the python process (the keep-alive loop restarts it) or `Start-ScheduledTask`. `tools\setup-web.ps1` now registers the task before stopping anything (fixed 5 Nov 2026, not yet run live), but still run it from an elevated window: a task registered elevated (-AtStartup) cannot be replaced from a non-elevated one.
 - Photo parser rejects an impossible `SYSTEM n` (outside 7-12) and takes the bet type from the number count; 4D photo text is cut at the footer (time or dashed serial). Now built on eight real tickets (two TOTO Ordinary QP, a System 7 with two draws, a two-board TOTO, 4D Roll, 4D iBet, a 10-line 4D). Vision misreads on the pink watermark: `/` read as 7 or 1 in draw numbers, lost TOTO title (found from the `SYSTEM n` header), glued letters on day names and the PRICE row, a board's first number read as `3.04`. System 8-11 have no real photo and will not get one: tested with synthetic rows in the A04 shape (`specs/p3-02-sys811.md`). Do not scrape Singapore Pools for ticket samples (terms ban it, no permission, and their artwork has no watermark noise).
 - iBet two-permutation win payout is an assumption.
-- Special/Hong Bao Toto draws not scheduled.
+- Special/Hong Bao Toto draws (P2-07, 2026-11-16): the Friday `--catch-up` run fills TOTO draw-number holes between the lowest and highest stored draw, lowest first, one request per run, via the `?sppl` deep link. Never below the lowest stored draw (that would be a backfill). TOTO live; 4D gap check (`--catch-up`, P2-07-J, 17 Nov) coded and tested, its Friday 22:15/22:30 tasks are in `setup-schedule.ps1` but not yet registered. `store` never re-saves a draw already on file (P2-07-I).
+- Failure mode seen 9 Nov 2026: the results URL redirected to `toto-results.singaporepools.com.sg/en/index.html`, a promo landing page with no results block, so both runs failed to parse. The Friday gap fill recovers it; the page is kept in `data/failed/toto/`.
 - Ticket layout (draw no. vs date) unknown until photos.
 
 ## Completed Milestones
@@ -44,3 +46,20 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - Design canvas: Arcade Drum A, A2 Toto hand-off, A3 4D hand-off.
 
 Docs: docs/toto-4d-rules-reference.md, results-source-decision.md, ingest-schedule.md.
+
+## Roadmap (traffic light: 🟢 done · 🟡 built, awaiting verification or owner pass · 🔴 blocked on a decision or permission · ⚪ not framed)
+| # | Module / AD | Scope | Status | Blocker / milestone |
+| :-- | :--- | :--- | :---: | :--- |
+| 1 | Rules ref v0.2 | Toto/4D rules, cl. 5.16 verified | 🟢 | 0/178 mismatches |
+| 2 | M1 matcher | `toto.py` / `fourd.py` with golden tests | 🟢 | |
+| 3 | P2-03 capture | After-draw capture on Grayskull | 🟢 | Live since 21 Oct |
+| 4 | P2-07 gap fill | Friday catch-up fetches lowest missing draw by number (TOTO live; 4D coded 17 Nov) | 🟡 | 4D: register the two Friday 22:15/22:30 tasks on Grayskull; first live runs Fri 20 Nov |
+| 5 | P3-01 / P3-02 OCR + ticket parser | Vision OCR, photo parser | 🟢 | System 8-11 synthetic only |
+| 6 | P4-02 / P4-06 / P3-07 | Web checker, PWA, shared results from screenshots | 🟢 | Live at toto.zenqi.cc |
+| 7 | P4-09 / P4-10 | Manual entry, results screen reader | 🟢 | |
+| 8 | P4-04 accounts | Optional magic-link accounts, saved history | 🟡 | Owner: Cloudflare Email setup + two env vars on Grayskull |
+| 9 | P5-01 stats | Owner-only descriptive stats | 🟢 | Public only after permission |
+| 10 | P6-15 Group TOTO / iTOTO | In v1 (owner 17 Nov 2026) | ⚪ | Needs FRAME: rules, ticket layout, no sample photo yet |
+| 11 | Testing phase | Higher photo limits | 🟢 | Renewed to 24 Nov 2026 13:57; renew or end then |
+| 12 | P2-05 / P2-06 / permission / P2-04 backfill | Alias, email, permission, backfill | 🔴 | Deferred by owner 16 Nov |
+| 13 | Paid tier / ads / Play listing | Monetisation | 🔴 | On hold until permission |

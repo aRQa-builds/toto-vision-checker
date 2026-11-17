@@ -48,6 +48,7 @@ or the test yourself.
 | 5 | Hand lane busy past `--wait-max` (3600 s). Not an attempt, no handoff | "Lane busy", plus the last position line. Re-run later. Not a Hand failure |
 | 6 | QUEUE CANCELLED: Lead dropped or cleared this ticket. No attempt, no handoff | The reason the script printed. Not a Hand failure |
 | 7 | HARNESS FAULT: delegate missing or died before any model call. No attempt, no handoff | The script's message. Check that HQ's `rig-loop.mjs` was called with `--repo` |
+| 8 | SPEC FAULT: the spec's own gate is red with its rig-new lines in place, or its rig-old/rig-anchor line is not in the target. No Hand call, no handoff | The script's message. Fix the spec or the test, then re-run. Not a Hand failure |
 
 A busy lane is a wait, not a failure: the script prints "You are N of M, est. start ~X min".
 `node d:/SakuraHydra/Coffee_Crew_HQ/scripts/rig-loop.mjs --queue-status` shows the queue.

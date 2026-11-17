@@ -4,26 +4,24 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-11-05 (session 4)
-- **Next session intent**: longer owner sitting: Cloudflare Email (SPF/DKIM, token), Grayskull env vars and setup-web.ps1, P2-05 alias, swap TOTO_CONTACT, send P2-06. Testing phase runs to 2026-11-09 23:57 UTC (renewed twice; the earlier 2026-11-05 date here was stale).
+- **Last session**: 2026-11-17 (session 7, not yet closed)
+- **Next session intent**: watch the Friday 20 Nov catch-up runs (first live runs of the gap fill); owner steps for accounts switch-on; register 4D Friday catch-up tasks on Grayskull (elevated); frame Group TOTO (P6-15).
 
 ## Current Task
-P2-03 live (verified 2026-10-25): 494 tests pass, six tasks registered, 4D 5551-5552 and Toto 4227-4228 stored. Remaining: P2-05 alias, then switch `TOTO_CONTACT` to results@zenqi.cc.
+P2-07 gap catch-up landed (`3a8fc44`, `f158f43`). Friday catch-up fetches the lowest missing TOTO draw by number, one request per run. Draw 4233 recovered by hand 2026-11-16.
 
 ## Task Queue (next 3)
-1. P2-05 set up results@zenqi.cc (M365 alias), then P2-06 send permission email (add schedule ask).
-2. P0-02 closed 2026-11-06: eleven real photos plus synthetic System 8-11 rows; real System 8-11 omitted by owner.
-3. Testing phase on toto.zenqi.cc ends 2026-10-29 03:09 UTC: renew or close out (`tools	esting-phase.ps1`). Then P4-04 accounts; P5-01 stats once framing is decided.
+1. Check `logs\ingest.log` after Fri 20 Nov 21:45/22:00: no holes now, so both runs should make no request.
+2. Accounts switch-on (P4-04): owner's Cloudflare Email steps, then two env vars on Grayskull.
+3. Fix stale `tools/simulate_user.py:90` message ("P4-10 screenshot OCR not built"; it is built).
 
 ## Blockers
-- None on the remote: public repo live (aRQa-builds/toto-vision-checker), 2026-10-25.
-- Ticket photos: needed to harden P3-02 (4D, System 7-11, Roll layouts unseen), and for P4-09/P4-10.
-- Permission from Singapore Pools: gates P2-04 backfill, paid tier, ads, Play.
+- Singapore Pools permission track DEFERRED by owner 2026-11-16 (P2-05, P2-06, permission, P2-04 backfill, paid tier, ads, Play). Not a blocker; do not chase.
+- Accounts switch-on waits on owner's Cloudflare Email setup.
 
 ## Open Decisions
-- Currency S$ vs US$; paid cap 150 vs 300/week (on hold).
-- Group TOTO/iTOTO support in v1?
-- P5-01 descriptive-only stats framing.
+- DECIDED 2026-11-17: Group TOTO/iTOTO is in v1 (P6-15). Needs FRAME.
+- Currency S$ vs US$; paid cap 150 vs 300/week (deferred with permission).
 
 ## Session Notes
 Rules gap closed, matcher built (135→149 tests), SP terms reviewed (scraping banned, 7 repos scrape anyway), user chose free non-monetised capture with citation. Parser on real pages (4068, 4D 5500), Windows scheduler scripts. Hand-off reveal designs A2/A3 on canvas.
@@ -173,3 +171,54 @@ Nothing. Parser changes are committed but the live checker still runs the old co
 - `MISS` (process): none. Handoffs 05-07 stay local and untracked.
 
 2026-11-05 | delegable: 2 of 4 | reasons: no-runner x2 | LOCAL: 1 · L1: 1 · L2: 0 (uncatalogued: 2) | lessons landed: 2
+
+## Session 6 close (2026-11-17)
+
+### Done
+- Roadmap walk-through: 20-row traffic-light table. P3-02 confirmed live (web checker process started 12 Nov, after the last parser commit). P4-09/P4-10 are built (`manual.py`, `results_screen.py`); the "needs ticket photos" note was stale.
+- Owner deferred the Singapore Pools permission track (items P2-05, P2-06, permission, P2-04, paid/ads/Play).
+- P2-07-G Friday catch-up fetches the lowest missing TOTO draw by number (`97cb270` red tests + stub, `3a8fc44` fix). Hand failed twice identically (`handoff-09`): it left the "yesterday stored" early return ahead of the hole check. Fixer fixed forward. `uncatalogued`.
+- P2-07-H gap fill not blocked by "today's draw already stored" (`df340db` red test, `f158f43`). Hand, attempt 1. `uncatalogued`.
+- Draw 4233 (Mon 9 Nov) recovered by one manual `--draw 4233` run. Web parse test: typed ticket for 4233 through `/api/ticket` and `/api/check` on the live checker revealed correctly against the stored draw.
+- Gate `py -3 -m pytest tests/test_ingest.py -q` 33 passed; full suite 619 passed.
+
+### Tally
+LOCAL 1 (P2-07-H) · L1 1 (P2-07-G, handoff-09) · L2 0 · LEAD DIRECT 0 · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lessons landed: 1 (generic HL-199).
+`Delegable: 2 of 2`.
+Escalation: LOCAL 1 · L1 1 · L2 0 (uncatalogued 2).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Switch accounts on: Cloudflare Email Sending for zenqi.cc (SPF/DKIM), token with "Email Sending: Edit", set both env vars on Grayskull. |
+| decision | Group TOTO / iTOTO support in v1 (P6-15). |
+| decision | Testing phase expired 2026-11-09 23:57 UTC: renew or close out (`tools	esting-phase.ps1`). |
+| decision | Push to the public remote (about 35 commits ahead). |
+
+### Next
+1. Read the 20 Nov Friday catch-up lines in `logs\ingest.log`.
+2. Owner steps above, accounts switch-on first.
+3. `simulate_user.py` stale P4-10 message.
+
+### Merged
+None (work on `main`).
+
+### Deployed
+Capture code (P2-07-G, P2-07-H) is live for the next scheduled run; tasks start a fresh process each run. Draw 4233 stored 2026-11-16.
+
+### Discoveries
+- `MISS` (process): `--catch-up` first version skipped the hole when today's draw was stored; caught by the live acceptance run, fixed same session as P2-07-H.
+- `SCOPE`: 9 Nov failure was a redirect to `toto-results.singaporepools.com.sg/en/index.html`, a promo landing page ("$12 Million Hong Bao Draw") with no results block. May recur before big draws; gap fill now recovers it on Friday.
+- `SCOPE`: 4D has no gap check (P2-07 is TOTO only).
+- `SCOPE`: `tools/simulate_user.py:90` says P4-10 is not built; it is.
+- `SCOPE`: `store` re-saves any draw the page returns, so a gap request answered with the latest page rewrites that draw's `captured_at`.
+- `SCOPE`: HQ `roadmap-report.mjs` parses 0 modules from this repo's PROJECT_BRAIN format.
+
+2026-11-17 | delegable: 2 of 2 | reasons: none | LOCAL: 1 · L1: 1 · L2: 0 (uncatalogued: 2) | lessons landed: 1
+
+## Session 7 notes (2026-11-17, close pending)
+- `simulate_user.py` stale message fixed (LEAD DIRECT, no-runner).
+- P2-07-I `store` never re-saves a stored draw: LOCAL 1 after a SPEC FAULT (spec dropped the skipped record, broke an existing test; `handoff-10`, local). Hand lesson: run the full gate against a reference fix before delegating.
+- P2-07-J 4D gap catch-up: LOCAL 1, uncatalogued. Schedule and docs LEAD DIRECT. 623 pytest green.
+- Owner: config sync applied (`open.md`), testing phase renewed to 24 Nov 13:57, Group TOTO in v1, roadmap table added to PROJECT_BRAIN, push approved.
+- Handoffs 07 and 08 have no lesson cited: check at close.

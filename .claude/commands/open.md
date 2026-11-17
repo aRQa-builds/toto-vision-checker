@@ -10,7 +10,9 @@ effort: medium
 
 !bash node d:/SakuraHydra/Coffee_Crew_HQ/scripts/scout-open.mjs
 
-!bash cd d:/SakuraHydra/aRQa_Solutions/aRQa_Engineer_Handbook && node scripts/refresh-due.mjs --all | grep -Ev '\sok$'
+!bash cd d:/SakuraHydra/Coffee_Crew_HQ && node scripts/refresh-due.mjs --all | grep -Ev '\sok$'
+
+!bash node d:/SakuraHydra/Coffee_Crew_HQ/scripts/handoff-triage.mjs --summary
 
 ---
 
@@ -52,11 +54,13 @@ Using the local context emitted by `scout-open.mjs` above:
 1. **Check Preflight Blockers:**
    - If any environmental failure or missing file is reported, halt immediately.
    - If step 0 reported a **DIFF**, raise it before planning — but do not overwrite unasked.
-   - **Refresh backlog** (the `refresh-due` line above, run in the Handbook, which holds the
-     chunked corpus and `.refresh-proposals/`). Each `PROPOSAL PENDING since <date>` row is a
+   - **Refresh backlog** (the `refresh-due` line above, run in Coffee_Crew_HQ, the source since SRC-01/02, which holds the
+     chunked corpus and `.refresh-proposals/`). Each `PROPOSAL PENDING since <date> · <n>d · <band>` row is a
      scrape waiting on the owner, and the weekly fallback skips it until it is landed. Put
      each one in the Blocked table as **AWAITING OWNER**, with its age in days and the
-     proposal file `.refresh-proposals/<date>-<id>.md`. Any OVERDUE row is a missed cycle,
+     proposal file `.refresh-proposals/<date>-<id>.md`. The band is the triage SLA (owner,
+     2026-11-06): `fresh` under 14 days, `amber` 14 to 27, `red` 28 and over. Show the band;
+     raise every `red` row as a blocker, not just a table line. Any OVERDUE row is a missed cycle,
      so raise it as a blocker as well. Never land a proposal at `/open`: Grace rules are
      owner-landed.
    - **HLQT lane heartbeat** (the `HLQT:` or `HLQT ` line in the orientation above, read from
@@ -132,6 +136,12 @@ Using the local context emitted by `scout-open.mjs` above:
      `hand-lessons.md` if one exists.
    - Flag any resolved `handoff-<nn>.md` whose "Lesson for Hand" was never landed. That is
      a close-step miss, and Hand repeats the error until it is landed.
+     The `HANDOFFS` line above (`handoff-triage.mjs --summary`, run in the project root) gives the
+     numbers. `open (<nums>)` is a handoff with a blank Outcome and no landed lesson: check the
+     commits before treating it as live, and fill its Outcome line once it is resolved.
+     `no lesson cited (<nums>)` is a resolved handoff that no `hand-lessons.md` line cites. Read its
+     "Lesson for Hand": an unlanded lesson is the close-step miss; a superseded or Lead-direct
+     handoff with no lesson is not. `HANDOFFS: none` needs no action.
 
 7. **Orientation Output:**
    Print **exactly four lines** to chat:
