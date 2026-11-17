@@ -4,7 +4,7 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-11-17 (session 7, not yet closed)
+- **Last session**: 2026-11-17 (session 7, closed)
 - **Next session intent**: watch the Friday 20 Nov catch-up runs (first live runs of the gap fill); owner steps for accounts switch-on; register 4D Friday catch-up tasks on Grayskull (elevated); frame Group TOTO (P6-15).
 
 ## Current Task
@@ -20,7 +20,7 @@ P2-07 gap catch-up landed (`3a8fc44`, `f158f43`). Friday catch-up fetches the lo
 - Accounts switch-on waits on owner's Cloudflare Email setup.
 
 ## Open Decisions
-- DECIDED 2026-11-17: Group TOTO/iTOTO is in v1 (P6-15). Needs FRAME.
+- DECIDED 2026-11-17: Group TOTO/iTOTO is in v1 (P6-15). Framed and built (slices A-F); unrounded share via `money()` is an assumption awaiting owner pass.
 - Currency S$ vs US$; paid cap 150 vs 300/week (deferred with permission).
 
 ## Session Notes
@@ -216,9 +216,43 @@ Capture code (P2-07-G, P2-07-H) is live for the next scheduled run; tasks start 
 
 2026-11-17 | delegable: 2 of 2 | reasons: none | LOCAL: 1 · L1: 1 · L2: 0 (uncatalogued: 2) | lessons landed: 1
 
-## Session 7 notes (2026-11-17, close pending)
-- `simulate_user.py` stale message fixed (LEAD DIRECT, no-runner).
-- P2-07-I `store` never re-saves a stored draw: LOCAL 1 after a SPEC FAULT (spec dropped the skipped record, broke an existing test; `handoff-10`, local). Hand lesson: run the full gate against a reference fix before delegating.
-- P2-07-J 4D gap catch-up: LOCAL 1, uncatalogued. Schedule and docs LEAD DIRECT. 623 pytest green.
-- Owner: config sync applied (`open.md`), testing phase renewed to 24 Nov 13:57, Group TOTO in v1, roadmap table added to PROJECT_BRAIN, push approved.
-- Handoffs 07 and 08 have no lesson cited: check at close.
+## Session 7 close (2026-11-17)
+
+### Done
+- Roadmap walk-through; owner config sync applied, testing phase renewed to 24 Nov 13:57, push approved.
+- `simulate_user.py` stale P4-10 message fixed. LEAD DIRECT (no-runner).
+- P2-07-I `store` never re-saves a stored draw: LOCAL after a SPEC FAULT (spec broke an existing test; `handoff-10`). `uncatalogued`.
+- P2-07-J 4D gap catch-up: LOCAL, `uncatalogued`. Friday schedule and docs LEAD DIRECT.
+- P6-15 Group TOTO / iTOTO, framed (`specs/p6-15-group-toto-frame.md`) and built: A `units.py` share and stake, B `scale_to_units` (`b2af25e`), C entry (`bdf4e87`), D reveal (`0335aef`): all LOCAL, attempt 1, uncatalogued. E photo reader (`fcfebea`): L1, `handoff-11`. F API, web, docs (`81ec3c7`): LEAD DIRECT, `too-large` (index.html 85 KB). Full suite 658 passed.
+- Pushed to origin/main.
+
+### Tally
+LOCAL 6 (P2-07-I, P2-07-J, P6-15-A, B, C, D) · L1 1 (P6-15-E) · L2 0 · LEAD DIRECT 3 (simulate_user, 4D schedule/docs, P6-15-F) · SPEC FAULT 1 (P2-07-I) · RESOURCE FAULT 0. Hand lessons landed: 6 (HL-204 to HL-209, generic).
+`Delegable: 5 of 6` for P6-15 (F `too-large`).
+Escalation: LOCAL 6 · L1 1 · L2 0 (uncatalogued 7).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Switch accounts on: Cloudflare Email Sending for zenqi.cc, token, two env vars on Grayskull. |
+| input | Register the 4D Friday catch-up tasks on Grayskull (elevated `setup-schedule.ps1`). |
+| input | A real Group TOTO / iTOTO ticket photo to test reading (none exists). |
+| decision | Testing phase renews/ends 24 Nov 13:57. |
+
+### Next
+1. Read the 20 Nov Friday catch-up lines in `logs\ingest.log`.
+2. Owner steps above, accounts switch-on first.
+3. Owner pass on unit-ticket share wording and the unrounded-share assumption.
+
+### Merged
+P6-15 on `main`; regression pass y (658); real test exercised n (specimen text only).
+
+### Deployed
+Nothing restarted: the live web checker still runs the old code until its process restarts.
+
+### Discoveries
+- `MISS` (process): the API check path bypassed `TicketDraft.check()` and so never applied the unit share; caught by the slice F test. Fixed.
+- `SCOPE`: `TicketDraft.check()` and the API duplicate the check path.
+- `SCOPE`: `ticket_entry.py` has a stale "not yet priced per unit" comment style elsewhere? none found; docstring updated.
+
+2026-11-17 | delegable: 5 of 6 | reasons: too-large x1 | LOCAL: 6 · L1: 1 · L2: 0 (uncatalogued: 7) | lessons landed: 6
