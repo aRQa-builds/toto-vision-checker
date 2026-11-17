@@ -9,6 +9,7 @@ python -m lottery_checker.ingest 4d     # latest 4D draw
 python -m lottery_checker.ingest toto   # latest TOTO draw
 python -m lottery_checker.ingest toto --draw 4068   # one specific draw (manual use only)
 python -m lottery_checker.ingest toto --catch-up    # Friday: fetch only if no draw stored for yesterday or today
+python -m lottery_checker.ingest 4d --catch-up      # Friday: fetch the lowest missing 4D draw by number, else no request
 ```
 
 Environment:
@@ -36,6 +37,8 @@ TOTO_CONTACT=results@zenqi.cc
 0  22 * * 1,4    cd /path/to/Toto_Vision_Checker && python3 -m lottery_checker.ingest toto >> logs/ingest.log 2>&1
 45 21 * * 5      cd /path/to/Toto_Vision_Checker && python3 -m lottery_checker.ingest toto --catch-up >> logs/ingest.log 2>&1
 0  22 * * 5      cd /path/to/Toto_Vision_Checker && python3 -m lottery_checker.ingest toto --catch-up >> logs/ingest.log 2>&1
+15 22 * * 5      cd /path/to/Toto_Vision_Checker && python3 -m lottery_checker.ingest 4d   --catch-up >> logs/ingest.log 2>&1
+30 22 * * 5      cd /path/to/Toto_Vision_Checker && python3 -m lottery_checker.ingest 4d   --catch-up >> logs/ingest.log 2>&1
 ```
 
 Windows 11 (Grayskull): use the two scripts in `tools\`.

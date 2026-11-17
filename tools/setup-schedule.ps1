@@ -6,6 +6,7 @@ Times are LOCAL time: Grayskull's clock must be on Singapore time (UTC+08:00).
   TOTO : Mon, Thu      21:45 and 22:00 retry
   TOTO : Fri           21:45 and 22:00 catch-up (special draws: New Year, Reunion,
                        Hong Bao, National Day replace that week's Thursday draw)
+  4D   : Fri           22:15 and 22:30 catch-up (fills a missed 4D draw by number)
 The retry makes no request if the draw is already stored. The Friday catch-up makes
 no request on a normal week, because Thursday's draw is already stored.
 
@@ -32,7 +33,9 @@ $Tasks = @(
   @{ Name = 'TOTO capture';      Game = 'toto'; Days = 'Monday','Thursday';             At = '21:45' },
   @{ Name = 'TOTO capture retry';Game = 'toto'; Days = 'Monday','Thursday';             At = '22:00' },
   @{ Name = 'TOTO Friday catch-up';       Game = 'toto --catch-up'; Days = 'Friday'; At = '21:45' },
-  @{ Name = 'TOTO Friday catch-up retry'; Game = 'toto --catch-up'; Days = 'Friday'; At = '22:00' }
+  @{ Name = 'TOTO Friday catch-up retry'; Game = 'toto --catch-up'; Days = 'Friday'; At = '22:00' },
+  @{ Name = '4D Friday catch-up';       Game = '4d --catch-up'; Days = 'Friday'; At = '22:15' },
+  @{ Name = '4D Friday catch-up retry'; Game = '4d --catch-up'; Days = 'Friday'; At = '22:30' }
 )
 
 if ($Remove) {
