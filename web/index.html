@@ -210,6 +210,8 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
 #splash .stt{font-family:var(--head);font-weight:700;font-size:clamp(26px,8vw,44px);letter-spacing:.06em;line-height:1.1;color:#F6F2FF;
   text-shadow:0 2px 0 #CFC6F5,0 4px 0 #9F93E0,0 6px 0 #7466C2,0 12px 22px rgba(6,3,24,.55)}
 #splash .stt i{display:inline-block;width:.42em;height:.42em;border-radius:50%;background:var(--gold);margin-right:.35em;vertical-align:.04em;box-shadow:0 0 18px rgba(255,216,74,.6)}
+#splash .snd{position:absolute;left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom));text-align:center;font-size:13px;letter-spacing:.08em;color:var(--muted);opacity:0;transition:opacity .4s ease;pointer-events:none}
+#splash .snd.on{opacity:.9}
 #splash .sts{margin-top:12px;font-size:13px;letter-spacing:.08em;color:var(--muted)}
 </style>
 </head>
@@ -428,9 +430,15 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
       if (!popped && t > END_AT + 700) return finish();
       requestAnimationFrame(frame);
     }
-    function skip(){ if (!popped) { POP_AT = 0; startPop(performance.now()); } else finish(); }
+    // Browsers keep sound locked until a touch, so the first tap switches it on (and the page says so);
+    // the next tap skips the intro as before.
+    var hint = null, unlocked = !(ac && ac.state === "suspended");
+    if (!unlocked){ hint = document.createElement("div"); hint.className = "snd"; hint.textContent = "🔊 Tap for sound";
+      el.appendChild(hint); setTimeout(function(){ if (hint) hint.classList.add("on"); }, 400); }
+    function unlock(){ unlocked = true; if (hint){ hint.remove(); hint = null; } try { ac.resume(); } catch (e) {} }
+    function skip(){ if (!unlocked){ unlock(); return; } if (!popped) { POP_AT = 0; startPop(performance.now()); } else finish(); }
     el.addEventListener("pointerdown", skip);
-    addEventListener("keydown", function k(e){ if (e.key === "Escape" || e.key === "Enter" || e.key === " "){ skip(); removeEventListener("keydown", k); } });
+    addEventListener("keydown", function k(e){ if (e.key === "Escape" || e.key === "Enter" || e.key === " "){ if (!unlocked) unlock(); skip(); removeEventListener("keydown", k); } });
     requestAnimationFrame(frame);
   } catch (e) { if (el) el.remove(); }
 })();
