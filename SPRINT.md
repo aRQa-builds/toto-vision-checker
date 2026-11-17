@@ -256,3 +256,29 @@ Nothing restarted: the live web checker still runs the old code until its proces
 - `SCOPE`: `ticket_entry.py` has a stale "not yet priced per unit" comment style elsewhere? none found; docstring updated.
 
 2026-11-17 | delegable: 5 of 6 | reasons: too-large x1 | LOCAL: 6 · L1: 1 · L2: 0 (uncatalogued: 7) | lessons landed: 6
+
+## Session 7 addendum (2026-11-17, after close)
+
+### Done
+- 4D Friday catch-up tasks registered on Grayskull (elevated `setup-schedule.ps1`, all eight tasks Ready). P6-15 verified live on typed Group TOTO and iTOTO tickets; BRAIN row 10 now 🟢.
+- Welcome splash (LEAD DIRECT, `too-large`, no-runner: visual and audio): synthesised clack, thud and pop sounds; balls pop two or three at a time and shove their neighbours; paint splatter fades at once; "Tap for sound" hint with iOS-safe unlock. Commits `770e07f`, `f860493`, `1b3c0f5`, `9e82fe6`, `dbc3382`, `d23b33b`. Owner confirmed sound works.
+
+### Tally
+LEAD DIRECT +1 (splash). LOCAL 6 · L1 1 · L2 0 unchanged. Hand lessons landed: 0 (none from this work).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Read the 20 Nov Friday catch-up lines in `logs\ingest.log`; then row 4 goes green. |
+| input | Accounts switch-on: Cloudflare Email Sending, token, two env vars on Grayskull. |
+| decision | Testing phase renews or ends 24 Nov 13:57. |
+
+### Next
+1. 20 Nov log read. 2. Accounts switch-on. 3. 24 Nov testing-phase decision.
+
+### Discoveries
+- `MISS` (process): a page change shipped without bumping `web/sw.js` VERSION, so installed apps kept the old splash; fixed (v24).
+- `MISS` (process): a Python patch that opened the target with `'w'` before encoding emptied `web/index.html` on an encode error; restored from git. Encode first, then write.
+- `SCOPE`: no "tap for sound" memory between visits; browsers cannot autoplay sound.
+
+2026-11-17 | delegable: 0 of 1 | reasons: needs-judgement x1 | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0
