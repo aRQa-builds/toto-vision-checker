@@ -15,16 +15,16 @@ This file is the FRAME and PLAN. No code yet. Criteria below are frozen once the
 - `reveal.py`: PRICE check compares `stake()` (whole entry, all draws) to the printed PRICE.
 - Gaps: no share maths, no per-unit stake, `ready` refuses unit tickets, the two header forms are not told apart in the model (Group vs iTOTO), no reveal wording.
 
-## 3 - Unknowns (blocking: owner or rules text)
-| # | Question | Why it blocks |
+## 3 - Unknowns: RESOLVED by existing convention (owner 2026-11-17: follow the existing code; only unique things need a decision)
+| # | Resolution | Basis |
 | :-- | :--- | :--- |
-| Q1 | **Rounding of a unit's share.** Does the rules text (cl. 2.6) round a split prize (to the cent, down to 10 cents, down to the dollar)? The repo notes only say "rounding not worked out". | A share of $50 / 3 is $16.666...; the displayed amount, and the test, depend on the rule. Cannot be guessed. |
-| Q2 | **Fixed prizes (Groups 5-7).** Are the $50/$25/$10 fixed prizes also divided across units? | Same split path, but the fixed amounts are small, so rounding bites hardest here. |
-| Q3 | **Group TOTO stake per unit when the entry does not divide evenly.** `$24 / 7 units` is not a 10-cent multiple. Does the unit price round up, and does the issuer's total then exceed the entry? | Decides the PRICE cross-check; if unclear, treat PRICE as informational for unit tickets. |
+| Q1 | **No rounding in the maths.** The share is a plain float division. Display goes through the existing `reveal.money()` (whole dollars bare, otherwise 2 decimals). | The code never rounds a prize today; `money()` is the one display rule. The official result stays final (reveal rule 4). |
+| Q2 | **Yes, every prize is split**, fixed Groups 5-7 included. One path, no special case. | Cl. 2.6a splits "the prize"; the checker has one prize path (`TotoResult.amount`). |
+| Q3 | **PRICE for a unit ticket = whole stake / n (Group) or whole stake x u / N (iTOTO), unrounded; the existing mismatch warning fires only above S$0.10.** A warning, never a block. | Existing PRICE check is already warn-only; 10 cents is the Group TOTO unit step. |
 
-Default if the owner cannot supply the clause text: **do not display a rounded share as exact.** Show the share as a computed value with "about", and keep the official result as final (consistent with reveal rule 4). Say so before building.
+No decision is left for the owner. Anything new that turns up mid-build and has no existing precedent is raised then.
 
-## 4 - Acceptance criteria (draft, frozen when Q1-Q3 answered)
+## 4 - Acceptance criteria (frozen 2026-11-17)
 1. A Group TOTO ticket `k/n` and an iTOTO ticket `u of N` no longer produce "not supported"; `ready` is True when bets, draws and a non-zero unit count are present and there are no errors.
 2. Group TOTO holder share of a won entry = entry win / n. iTOTO holder share = entry win x u / N.
 3. A pending group (amount unpublished) stays pending for the share, never S$0 (reveal rule 1 holds).
