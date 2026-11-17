@@ -75,6 +75,7 @@ class TicketResult:
     total_stake: float
     total_won: Optional[float]      # None if ANY line is pending — never silently 0
     draw_dates: tuple[date, ...]
+    units: Optional[tuple[str, int, int]] = None    # (kind, a, b) of a Group TOTO / iTOTO unit ticket
 
     @property
     def pending(self) -> bool:
@@ -172,3 +173,10 @@ def check_ticket(entries: Sequence[Entry], draws: Iterable[DrawRef]) -> TicketRe
                  else sum(ln.won or 0 for ln in lines))
     return TicketResult(lines, total_stake, total_won,
                         tuple(r.draw_date for r in refs))
+
+
+def scale_to_units(result: TicketResult, kind: str, a: int, b: int) -> TicketResult:
+    raise NotImplementedError
+
+
+# end of ticket.py

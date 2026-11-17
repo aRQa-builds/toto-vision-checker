@@ -145,3 +145,46 @@ def test_real_toto_draw_end_to_end():
     assert r.total_stake == 7 and r.total_won == 93233.0
     assert r.earliest_draw_date == date(2025, 4, 10)
     assert "ended on" in r.claim_hint(date(2026, 10, 18))   # long past, still not "void"
+
+
+# ---------------- unit tickets (P6-15 slice B, spec p6-15-scale-units) ----------------
+
+def _group1_result(published=True):
+    from lottery_checker.ticket import check_ticket as ct
+    ref = toto_ref(group_prizes={1: 900.0} if published else {})
+    return ct([toto.TotoEntry("ordinary", (1, 2, 3, 4, 5, 6))], [ref])
+
+
+def test_scale_group_splits_stake_and_win_across_units():
+    from lottery_checker.ticket import scale_to_units
+    r = _group1_result()
+    assert (r.total_stake, r.total_won, r.units) == (1.0, 900.0, None)
+    s = scale_to_units(r, "group", 1, 3)
+    assert s.units == ("group", 1, 3)
+    assert s.total_won == pytest.approx(300.0) and s.total_stake == pytest.approx(1 / 3)
+    assert s.lines[0].won == pytest.approx(300.0) and s.lines[0].stake == pytest.approx(1 / 3)
+    assert s.net == pytest.approx(300.0 - 1 / 3)
+    assert r.total_won == 900.0 and r.lines[0].won == 900.0          # the input is not changed
+
+
+def test_scale_itoto_takes_units_bought_over_total():
+    from lottery_checker.ticket import scale_to_units
+    s = scale_to_units(_group1_result(), "itoto", 2, 28)
+    assert s.total_won == pytest.approx(900.0 * 2 / 28)
+    assert s.total_stake == pytest.approx(2 / 28)
+    assert s.units == ("itoto", 2, 28)
+
+
+def test_scale_keeps_a_pending_win_pending():
+    from lottery_checker.ticket import scale_to_units
+    r = _group1_result(published=False)
+    assert r.total_won is None
+    s = scale_to_units(r, "group", 1, 3)
+    assert s.total_won is None and s.lines[0].won is None and s.pending
+    assert s.pending_groups == (1,)
+
+
+def test_scale_rejects_bad_units():
+    from lottery_checker.ticket import scale_to_units
+    with pytest.raises(ValueError):
+        scale_to_units(_group1_result(), "group", 4, 3)
