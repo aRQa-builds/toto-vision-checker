@@ -233,9 +233,12 @@ def yesterday_sgt() -> str:
 
 
 def run(game: str, data_dir: Path, draw_no: Optional[int] = None, catch_up: bool = False) -> int:
-    holes = missing_draws(game, data_dir) if game == "toto" and catch_up else []
+    holes = missing_draws(game, data_dir) if catch_up else []
     if catch_up and not holes and stored_for_date(game, yesterday_sgt(), data_dir):
         print(f"[{game}] catch-up: yesterday's draw already stored, no special draw expected; no request made")
+        return 0
+    if game == "4d" and catch_up and not holes:
+        print("[4d] catch-up: no gaps; no request made")
         return 0
     if draw_no is not None and already_stored(game, draw_no, data_dir):
         print(f"[{game}] draw {draw_no} already stored; no request made")
