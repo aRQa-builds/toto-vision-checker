@@ -416,3 +416,43 @@ def test_gap_fill_does_not_rewrite_a_draw_already_stored(monkeypatch, tmp_path):
     assert seen == [ingest.official_url("toto", 4067)]
     assert json.loads((folder / "4068.json").read_text())["captured_at"] == "OLD"
     assert (raw / "4068.html").read_text(encoding="utf-8") == "OLD RAW"
+
+
+# ---------- P2-07-J: 4D gap catch-up (spec p2-07-4d-gap) ----------
+
+def _stored_4d(tmp_path, draw_no, day):
+    folder = tmp_path / "draws" / "4d"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{draw_no}.json").write_text(json.dumps({"draw_no": draw_no, "draw_date": day}))
+
+
+def test_4d_catch_up_fetches_the_lowest_hole_by_number(monkeypatch, tmp_path):
+    _stored_4d(tmp_path, 5560, "2026-11-08")
+    _stored_4d(tmp_path, 5563, "2026-11-15")                # holes 5561 and 5562
+    _on(monkeypatch, "2026-11-20")                          # Fri: no 4D draw today
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(FOURD_HTML, seen))
+    assert ingest.run("4d", tmp_path, catch_up=True) == 0
+    assert seen == [ingest.official_url("4d", 5561)]        # one request, lowest hole first
+    assert not (tmp_path / "draws" / "4d" / "5561.json").exists()   # the page carried 5500
+
+
+def test_4d_catch_up_makes_no_request_without_a_hole(monkeypatch, tmp_path, capsys):
+    _stored_4d(tmp_path, 5562, "2026-11-11")
+    _stored_4d(tmp_path, 5563, "2026-11-15")
+    _on(monkeypatch, "2026-11-20")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(FOURD_HTML, seen))
+    assert ingest.run("4d", tmp_path, catch_up=True) == 0
+    assert seen == []                                        # must not ask for "the next draw"
+    assert "no request made" in capsys.readouterr().out
+
+
+def test_4d_normal_run_still_asks_for_the_next_draw(monkeypatch, tmp_path):
+    _stored_4d(tmp_path, 5560, "2026-11-08")
+    _stored_4d(tmp_path, 5563, "2026-11-15")                # a hole, but not a catch-up run
+    _on(monkeypatch, "2026-11-18")
+    seen = []
+    monkeypatch.setattr(ingest.urllib.request, "urlopen", _fake_resp(FOURD_HTML, seen))
+    assert ingest.run("4d", tmp_path) == 0
+    assert seen == [ingest.official_url("4d", 5564)]
