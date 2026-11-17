@@ -262,6 +262,41 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
       return {body: B[0], over: O[0], s: s};
     }
 
+    // ---- sound: synthesised with Web Audio, no files. Browsers keep audio locked until the person
+    // touches the page, so it plays only when the context is already running; otherwise silent.
+    var AC = window.AudioContext || window.webkitAudioContext, ac = null, outG = null, nz = null, lastClack = 0, lastThud = 0;
+    try { if (AC){ ac = new AC(); outG = ac.createGain(); outG.gain.value = .55; outG.connect(ac.destination);
+      nz = ac.createBuffer(1, Math.floor(ac.sampleRate * .25), ac.sampleRate); var nd = nz.getChannelData(0);
+      for (var q = 0; q < nd.length; q++) nd[q] = Math.random() * 2 - 1;
+      if (ac.state === "suspended") ac.resume(); } } catch (e) { ac = null; }
+    function live(){ return ac && ac.state === "running"; }
+    function burst(type, f, qv, gain, len){        // filtered noise puff
+      var s0 = ac.createBufferSource(), fl = ac.createBiquadFilter(), gn = ac.createGain(), now = ac.currentTime;
+      s0.buffer = nz; fl.type = type; fl.frequency.value = f; fl.Q.value = qv;
+      gn.gain.setValueAtTime(gain, now); gn.gain.exponentialRampToValueAtTime(.0001, now + len);
+      s0.connect(fl); fl.connect(gn); gn.connect(outG); s0.start(now); s0.stop(now + len + .02);
+    }
+    function tone(f0, f1, gain, len, type){        // pitched blip with a falling pitch
+      var o = ac.createOscillator(), gn = ac.createGain(), now = ac.currentTime;
+      o.type = type || "sine"; o.frequency.setValueAtTime(f0, now); o.frequency.exponentialRampToValueAtTime(f1, now + len);
+      gn.gain.setValueAtTime(gain, now); gn.gain.exponentialRampToValueAtTime(.0001, now + len);
+      o.connect(gn); gn.connect(outG); o.start(now); o.stop(now + len + .02);
+    }
+    function clack(v){                              // two balls meet: a hard, bright click
+      if (!live()) return; var now = performance.now(); if (now - lastClack < 28) return; lastClack = now;
+      var k = Math.max(.08, Math.min(1, v / 700)), f = 1500 + Math.random() * 1500;
+      burst("bandpass", f, 3, .30 * k, .05); tone(f * .6, f * .45, .16 * k, .07, "triangle");
+    }
+    function thud(v){                               // a ball lands on the floor: a soft low knock
+      if (!live()) return; var now = performance.now(); if (now - lastThud < 45) return; lastThud = now;
+      var k = Math.max(.1, Math.min(1, v / 900)); tone(150 + Math.random() * 40, 60, .30 * k, .12, "sine");
+    }
+    function popSound(){                            // the bubble pops, then a wet splat
+      if (!live()) return; var k = .6 + Math.random() * .4;
+      burst("highpass", 1800, .7, .22 * k, .07); tone(520 + Math.random() * 380, 130, .16 * k, .09, "sine");
+      burst("lowpass", 700 + Math.random() * 400, .8, .20 * k, .22);
+    }
+
     var N = W < 520 ? 22 : 32, balls = [], t0 = performance.now(), last = t0, used = {}, kicked = 0;
     for (var i = 0; i < N; i++){
       var n; do { n = 1 + Math.floor(Math.random() * 49); } while (used[n]); used[n] = 1;
@@ -270,10 +305,10 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
         x: r + Math.random() * Math.max(1, W - 2 * r), y: -r - i * 78 - Math.random() * 50,
         vx: (Math.random() - .5) * 240, vy: 40 + Math.random() * 120, a: Math.random() * 6.28, w: 0, pop: -1});
     }
-    var G = 1450, REST = 0.74, POP_AT = 3900, POP_LEN = 650, END_AT = 4600, popped = false, done = false;
+    var G = 1450, REST = 0.74, POP_AT = 3900, POP_LEN = 2400, END_AT = 4600, popped = false, done = false;
     function startPop(now){
       if (popped) return; popped = true; el.classList.add("out");
-      var base = now - t0; balls.forEach(function(b){ b.pop = base + Math.random() * 280; }); POP_AT = base;
+      var base = now - t0; balls.forEach(function(b){ b.pop = base + Math.random() * 280; b.splat = makeSplat(b); b.said = false; }); POP_AT = base;
     }
     function step(dt){
       balls.forEach(function(b){
@@ -281,7 +316,7 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
         b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
         if (b.x < b.r){ b.x = b.r; b.vx = Math.abs(b.vx) * REST; }
         if (b.x > W - b.r){ b.x = W - b.r; b.vx = -Math.abs(b.vx) * REST; }
-        if (b.y > H - b.r){ b.y = H - b.r; b.vy = -Math.abs(b.vy) * REST;
+        if (b.y > H - b.r){ b.y = H - b.r; if (b.vy > 160) thud(b.vy); b.vy = -Math.abs(b.vy) * REST;
           if (Math.abs(b.vy) < 90) b.vy = -(260 + Math.random() * 260);
           b.vx *= 0.985; if (Math.abs(b.vx) < 40) b.vx += (Math.random() - .5) * 220; }
         b.w = b.vx / b.r; b.a += b.w * dt;
@@ -293,7 +328,7 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
           var nx = dx / d, ny = dy / d, ov = (m - d) / 2;
           p.x -= nx * ov; p.y -= ny * ov; q.x += nx * ov; q.y += ny * ov;
           var rv = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
-          if (rv < 0){ var k = -(1 + 0.8) * rv / 2; p.vx -= k * nx; p.vy -= k * ny; q.vx += k * nx; q.vy += k * ny; }
+          if (rv < 0){ clack(-rv); var k = -(1 + 0.8) * rv / 2; p.vx -= k * nx; p.vy -= k * ny; q.vx += k * nx; q.vy += k * ny; }
         }
       }
     }
@@ -315,16 +350,45 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
       g.restore();
       g.drawImage(sp.over, b.x - half, b.y - half, sp.s, sp.s);
     }
-    function bubblePop(b, p){
-      if (p < .22){
-        var k = 1 + p / .22 * .28; g.save(); g.globalAlpha = 1 - p / .22 * .4; g.translate(b.x, b.y); g.scale(k, k); g.translate(-b.x, -b.y); ball(b); g.restore();
+    function makeSplat(b){                          // the paint a popped ball leaves: lobes round the middle plus flung drops
+      var lobes = [], drops = [], i, n = 7 + Math.floor(Math.random() * 3), base = Math.random() * 6.28;
+      for (i = 0; i < n; i++) lobes.push({an: base + i / n * 6.28 + (Math.random() - .5) * .5, off: .3 + Math.random() * .35, sz: .2 + Math.random() * .22});
+      var m = 12 + Math.floor(Math.random() * 6);
+      for (i = 0; i < m; i++) drops.push({an: Math.random() * 6.28, d: 1.4 + Math.random() * 2.6, sz: .07 + Math.random() * .17, slow: .75 + Math.random() * .5});
+      return {lobes: lobes, drops: drops};
+    }
+    function bubblePop(b, age){                     // age in ms since this ball popped
+      if (age < 150){
+        var k = 1 + age / 150 * .28; g.save(); g.globalAlpha = 1 - age / 150 * .4; g.translate(b.x, b.y); g.scale(k, k); g.translate(-b.x, -b.y); ball(b); g.restore();
       }
-      var e = Math.min(1, p / .85);
-      g.save(); g.globalAlpha = Math.max(0, 1 - e); g.lineWidth = 2.6; g.strokeStyle = b.fill;
-      g.beginPath(); g.arc(b.x, b.y, b.r * (1.2 + e * 1.1), 0, 6.2832); g.stroke(); g.restore();
-      g.save(); g.fillStyle = b.fill; g.globalAlpha = Math.max(0, 1 - e);
-      for (var i = 0; i < 8; i++){ var an = i / 8 * 6.2832 + b.n, d = b.r * (.9 + e * 1.8);
-        g.beginPath(); g.arc(b.x + Math.cos(an) * d, b.y + Math.sin(an) * d, Math.max(.4, 3.6 * (1 - e)), 0, 6.2832); g.fill(); }
+      var re = Math.min(1, age / 700);              // the ring is the quick part
+      if (re < 1){
+        g.save(); g.globalAlpha = 1 - re; g.lineWidth = 2.6; g.strokeStyle = b.fill;
+        g.beginPath(); g.arc(b.x, b.y, b.r * (1.2 + re * 1.1), 0, 6.2832); g.stroke(); g.restore();
+      }
+      var e = Math.min(1, age / POP_LEN), sag = b.r * 1.3 * e * e;      // the splatter spreads slowly, sags, then fades
+      var al = e < .62 ? 1 : Math.max(0, (1 - e) / .38), S = b.splat;
+      if (!S || al <= 0) return;
+      var spread = 1 - Math.pow(1 - Math.min(1, age / 1500), 3), cy = b.y + sag * .6;
+      g.save(); g.fillStyle = b.fill; g.strokeStyle = b.fill; g.lineCap = "round";
+      g.globalAlpha = al * .55;
+      S.drops.forEach(function(d){
+        var sp = Math.min(1, spread * d.slow), dx = Math.cos(d.an) * b.r * d.d * sp, dy = Math.sin(d.an) * b.r * d.d * sp + sag * d.slow;
+        g.lineWidth = Math.max(.6, b.r * d.sz * 1.25 * (1 - sp * .5));
+        g.beginPath(); g.moveTo(b.x + dx * .72, cy + dy * .72); g.lineTo(b.x + dx, b.y + dy); g.stroke();
+      });
+      g.globalAlpha = al;
+      S.drops.forEach(function(d){
+        var sp = Math.min(1, spread * d.slow), dx = Math.cos(d.an) * b.r * d.d * sp, dy = Math.sin(d.an) * b.r * d.d * sp + sag * d.slow;
+        g.beginPath(); g.arc(b.x + dx, b.y + dy, Math.max(.5, b.r * d.sz * (1 - sp * .3)), 0, 6.2832); g.fill();
+      });
+      var cr = b.r * (.5 + .55 * spread);
+      g.beginPath(); g.arc(b.x, cy, cr, 0, 6.2832); g.fill();
+      S.lobes.forEach(function(l){
+        g.beginPath(); g.arc(b.x + Math.cos(l.an) * b.r * (l.off + .4 * spread), cy + Math.sin(l.an) * b.r * (l.off + .4 * spread), b.r * l.sz * (1 + .3 * spread), 0, 6.2832); g.fill();
+      });
+      g.globalAlpha = al * .32; g.fillStyle = "#FFFFFF";                 // a wet gleam
+      g.beginPath(); g.ellipse(b.x - cr * .3, cy - cr * .35, cr * .3, cr * .16, -.6, 0, 6.2832); g.fill();
       g.restore();
     }
     function finish(){ if (done) return; done = true; removeEventListener("resize", size);
@@ -344,11 +408,11 @@ footer{font-size:11px;color:var(--dim);line-height:1.6;text-align:center;margin-
       if (!popped) balls.forEach(floorShadow);
       balls.forEach(function(b){
         if (b.pop < 0){ ball(b); return; }
-        var p = (t - b.pop) / POP_LEN;
-        if (p < 0) ball(b); else if (p < 1) bubblePop(b, p);
+        var age = t - b.pop;
+        if (age < 0) ball(b); else if (age < POP_LEN){ if (!b.said){ b.said = true; popSound(); } bubblePop(b, age); }
       });
-      if (popped && t > POP_AT + 280 + POP_LEN - 150) finish();
-      if (t > END_AT + 700) return finish();
+      if (popped && t > POP_AT + 280 + POP_LEN) finish();
+      if (!popped && t > END_AT + 700) return finish();
       requestAnimationFrame(frame);
     }
     function skip(){ if (!popped) { POP_AT = 0; startPop(performance.now()); } else finish(); }
