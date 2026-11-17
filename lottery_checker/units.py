@@ -12,11 +12,34 @@ from typing import Optional
 
 
 def unit_share(win: Optional[float], kind: str, a: int, b: int) -> Optional[float]:
-    raise NotImplementedError
+    if kind not in ("group", "itoto"):
+        raise ValueError(f"Invalid kind: {kind}")
+    if b < 1:
+        raise ValueError("b must be at least 1")
+    if a < 1 or a > b:
+        raise ValueError("a must be between 1 and b inclusive")
+
+    if win is None:
+        return None
+
+    if kind == "group":
+        return win / b
+    else:  # itoto
+        return win * a / b
 
 
 def unit_stake(whole_stake: float, kind: str, a: int, b: int) -> float:
-    raise NotImplementedError
+    if kind not in ("group", "itoto"):
+        raise ValueError(f"Invalid kind: {kind}")
+    if b < 1:
+        raise ValueError("b must be at least 1")
+    if a < 1 or a > b:
+        raise ValueError("a must be between 1 and b inclusive")
+
+    if kind == "group":
+        return whole_stake / b
+    else:  # itoto
+        return whole_stake * a / b
 
 
 UNIT_KINDS = ("group", "itoto")
