@@ -166,3 +166,48 @@ def test_real_4d_reveal():
     rv = build_reveal(check_ticket(entries, [ref]), printed_price=13.00, today=TODAY)
     assert rv.headline == "You won S$6,010" and not rv.needs_review
     assert rv.official_links == [(5500, official_url("4d", 5500))]
+
+
+# ---------------- P6-15-D: unit tickets (Group TOTO, iTOTO) ----------------
+
+from lottery_checker.ticket import scale_to_units
+
+
+def _units(entry_nums, kind, a, b):
+    r = check_ticket([toto.TotoEntry("ordinary", entry_nums)], [toto_ref()])
+    return scale_to_units(r, kind, a, b)
+
+
+def test_unit_ticket_names_the_share_and_the_units():
+    rv = build_reveal(_units((1, 2, 3, 40, 41, 42), "group", 1, 2), today=TODAY)   # G7 S$10 / 2
+    assert rv.state == "won" and rv.headline == "You won S$5"
+    assert rv.units_text == "Your share: 1 of 2 units (Group TOTO)"
+    assert rv.subline.startswith(rv.units_text) and "Staked S$0.50" in rv.subline
+    assert rv.claim_text
+
+
+def test_itoto_pending_names_units_and_never_shows_zero():
+    rv = build_reveal(_units((1, 2, 3, 4, 5, 7), "itoto", 3, 28), today=TODAY)    # G2 unpriced
+    assert rv.state == "pending" and rv.units_text == "Your share: 3 of 28 units (iTOTO)"
+    assert rv.units_text in rv.subline and "not yet published" in rv.subline
+    assert "No win" not in all_text(rv) and rv.lines[0].result_text == "Group 2: amount not yet published"
+    ue = build_reveal(_units((1, 2, 3, 4, 5, 7), "itoto", 3, 28), today=TODAY, results_source="user")
+    assert ue.units_text in ue.subline
+
+
+def test_unit_ticket_no_win_still_says_units():
+    rv = build_reveal(_units((10, 11, 12, 13, 14, 15), "group", 2, 3), today=TODAY)
+    assert rv.state == "no_win" and rv.units_text in rv.subline
+
+
+def test_ordinary_ticket_has_no_units_text():
+    rv = build_reveal(check_ticket([toto.TotoEntry("ordinary", (1, 2, 3, 40, 41, 42))], [toto_ref()]), today=TODAY)
+    assert rv.units_text is None and rv.subline.startswith("Staked")
+
+
+def test_unit_ticket_price_check_allows_ten_cents():
+    r = _units((10, 11, 12, 13, 14, 15), "group", 1, 3)       # stake 1/3
+    assert build_reveal(r, printed_price=0.30, today=TODAY).stake.state == "match"
+    assert build_reveal(r, printed_price=0.50, today=TODAY).stake.state == "mismatch"
+    r1 = check_ticket([toto.TotoEntry("ordinary", (10, 11, 12, 13, 14, 15))], [toto_ref()])
+    assert build_reveal(r1, printed_price=1.05, today=TODAY).stake.state == "mismatch"   # ordinary stays strict
