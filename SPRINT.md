@@ -4,8 +4,8 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-11-17 (session 7, closed)
-- **Next session intent**: watch the Friday 20 Nov catch-up runs (first live runs of the gap fill); owner steps for accounts switch-on; register 4D Friday catch-up tasks on Grayskull (elevated); frame Group TOTO (P6-15).
+- **Last session**: 2026-11-24 (session 8, closed)
+- **Next session intent**: owner OK to take item 4 to green; owner steps for accounts switch-on; confirm the new testing-phase expiry; owner pass on the unit-ticket share wording.
 
 ## Current Task
 P2-07 gap catch-up landed (`3a8fc44`, `f158f43`). Friday catch-up fetches the lowest missing TOTO draw by number, one request per run. Draw 4233 recovered by hand 2026-11-16.
@@ -285,3 +285,39 @@ LEAD DIRECT +1 (splash). LOCAL 6 · L1 1 · L2 0 unchanged. Hand lessons landed:
 
 ### Item 4 note (2026-11-17)
 - Owner offered the live 4D ticket for draw 5553 for item 4. Not usable: 5553 is stored (25 Oct) and 5550-5562 are contiguous, so catch-up finds no gap. Item 4 still waits on the 20 Nov log. Ticket could separately prove the 4D check path (SCOPE, not run).
+
+## Session 8 close (2026-11-24)
+
+### Done
+- /open: HLQT OK, refresh backlog clear, skill-pull all 8 match, handoffs 31 (0 open, 0 uncited).
+- Config sync applied and committed: `open.md` and `close.md` pulled from Coffee_Crew_HQ (`f42bf10`). LEAD DIRECT (config, no gated slice).
+- Item 4 evidence read: `logs/ingest.log` 20 Nov 21:45-22:30, TOTO and 4D catch-up each made no request ("no gaps"). Light stays 🟡 until the owner confirms.
+- Testing phase renewed by the owner on 24 Nov (new expiry not read from here).
+
+### Tally
+LOCAL 0 · L1 0 · L2 0 · LEAD DIRECT 1 · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lessons landed: 0 (no Hand work, no corrections).
+`Delegable: 0 of 0`.
+Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Accounts switch-on: Cloudflare Email Sending for zenqi.cc, token, two env vars on Grayskull, then elevated `setup-web.ps1`. |
+| input | Confirm the new testing-phase expiry on Grayskull. |
+| decision | Owner OK to mark item 4 (P2-07 gap fill) green. |
+| decision | Owner pass on unit-ticket share wording (unrounded-share assumption). |
+
+### Next
+1. Owner OK on item 4. 2. Accounts switch-on. 3. Candidate slice: 4D check-path test with the draw 5553 ticket (needs spec and red test first).
+
+### Merged
+None.
+
+### Deployed
+None.
+
+### Discoveries
+- `SCOPE`: `TicketDraft.check()` and the API duplicate the check path (carried forward).
+- `SCOPE`: no "tap for sound" memory between visits (carried forward).
+
+2026-11-24 | delegable: 0 of 0 | reasons: none | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0
