@@ -107,6 +107,34 @@ Using the local context emitted by `scout-open.mjs` above:
      or an owner pass · 🔴 blocked on a decision, funding or plan tier · ⚪ not yet framed.
    - Cover every module, open AD and parked epic in `PROJECT_BRAIN.md`, not only active work.
      Order by build sequence, with parked or blocked epics at the end.
+   - Group slices of one module into one row (e.g. `M-1.2a–e`) so the table stays readable.
+     A row's light is the worst light among its slices.
+
+   **Then render the Progress block (owner, 2026-11-18: "that is a better visual"). Default in
+   every project that has a `roadmap-report.mjs`; no argument needed.** Directly below the table:
+
+   1. Run `node scripts/roadmap-report.mjs` first (regenerates `ROADMAP.html`) and
+      `node scripts/roadmap-report.mjs --check` (queue vs trunk). Print its one-line summary and the
+      `--check` verdict ("N stale, N to review"). Exit 1 is a blocker, raised before planning.
+   2. Draw one 20-cell text bar per signal, `█` filled, `░` empty, with the raw count beside it:
+
+      ```
+      Modules done       ███████████████████░  37 / 41   (90%)
+      Blocked on AD      ██░░░░░░░░░░░░░░░░░░   2          (items …)
+      Roadmap (parked)   ██░░░░░░░░░░░░░░░░░░   2          (items …)
+      Runnable gates     █████████░░░░░░░░░░░  18 / 41
+      ADs landed         ██████████████████░░  69 (+2 drafts)
+      Phase ladder:  ▶ P1 …  →  ◆ P2 …  →  ○ P3 …
+      Last session (sNN):  LOCAL n · L1 n · L2 n · SPEC FAULT n · LEAD DIRECT n   Delegable n of m, escalation rate x%
+      ```
+
+   3. **Every figure is read from the report or from SPRINT.md, never recalled or estimated.**
+      The module-done percentage is the share of modules in the done state, NOT measured progress.
+      Say so in one line while fewer than half the modules record unit counts (AD-43: a chart is
+      only drawn from data that was actually recorded). Never draw a per-module percentage bar
+      from a status band.
+   4. Name `ROADMAP.html` as the full surface. In a project with no `roadmap-report.mjs`
+      (`Coffee_Crew_HQ` itself, RR-01), build the bars from the `SPRINT.md` tally alone.
 
 4. **Sort Daily Queue (Micro View):**
    Present immediate tasks parsed from `SPRINT.md` in strict priority order:

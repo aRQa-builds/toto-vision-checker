@@ -107,7 +107,7 @@ Runs **last**, after steps 1–4a are written. This is the one deliberate except
    `done` with no corresponding AD/commit backing it.
 4. If a contradiction is found, fix it now, in this same close pass.
 
-**Output format — three headed sections, in this order, header text fixed:**
+**Output format — four headed sections, in this order, header text fixed:**
 
 ```text
 ## Session <N> close — done:
@@ -120,7 +120,35 @@ Escalation: LOCAL a · L1 b · L2 c (uncatalogued u). Hand lessons landed: k.
 
 ## Open
 
-[Render the SPRINT-queue-modules table condensed to one line per row using the exact glyphs: ✅ done · 🔶 done (partial split) · ⏳ stub/pending/blocked-on-work · ⛔ blocked on a decision or FRAME · 📋 roadmap]
+[Owner, 2026-11-18: close and open show the SAME roadmap. Render the traffic-light numbered table exactly as `/open` step 3 defines it, not the old glyph list:
+
+| # | Module / AD | Initial Scope Objective | Status | Key Blocker / Milestone |
+| :-- | :--- | :--- | :---: | :--- |
+
+`Status` is one light: 🟢 shipped/done · 🟡 built, awaiting verification or an owner pass · 🔴 blocked on a decision, funding or plan tier · ⚪ not yet framed. Group slices of one module into one row (worst light wins). Cover every module, open AD and parked epic, in build order, blocked and parked last. Keep the `#` numbers stable between open and close, and reuse them in Todos next. Mark any row whose light changed this session with `▲` after the light (e.g. `🟢▲`).]
+
+## Roadmap progress
+
+[Owner, 2026-11-18: the open view was "a better visual", so close mirrors it. Table above, then the same bars as `/open` step 3,
+read AFTER steps 1-4a are written, with a **this-session delta** on every line.]
+
+1. Run `node scripts/roadmap-report.mjs` and `node scripts/roadmap-report.mjs --check` (skip both in a
+   project with no `roadmap-report.mjs`, e.g. `Coffee_Crew_HQ`; build from the SPRINT.md tally alone).
+   A `--check` exit 1 means the queue disagrees with the trunk: fix the row in this pass, then re-run.
+2. Draw the bars exactly as `/open` does (20 cells, `█` / `░`, raw count beside each) and append `(was X, +n this session)`
+   where the open figure is known (the `SPRINT-last-session` row or the previous close).
+
+   ```text
+   Modules done       ███████████████████░  38 / 41   (93%)   was 37, +1 this session
+   Blocked on AD      ██░░░░░░░░░░░░░░░░░░   2                 unchanged
+   Runnable gates     █████████░░░░░░░░░░░  19 / 41           was 18, +1
+   ADs landed         ██████████████████░░  70 (+2 drafts)    +1
+   Phase ladder:  ▶ P1 …  →  ◆ P2 …  →  ○ P3 …
+   Tally this session:  LOCAL n · L1 n · L2 n · SPEC FAULT n · LEAD DIRECT n   Delegable n of m
+   ```
+3. Every figure is read, never recalled. A delta is shown only when the "was" value is on disk; otherwise write
+   `(no baseline)`. The module percentage is the share of modules in the done state, not measured progress (AD-43).
+4. Close the block with one line: modules that changed light this session, by number, e.g. `🟡→🟢 items 11, 12`.
 
 ## Todos next
 
