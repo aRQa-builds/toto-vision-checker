@@ -4,8 +4,8 @@ _Current work state. Updated every session close._
 ## Status
 - **Sprint**: 1, rules + matcher + results capture
 - **Phase**: Active build, capture live on Grayskull
-- **Last session**: 2026-11-24 (session 8, closed)
-- **Next session intent**: owner OK to take item 4 to green; owner steps for accounts switch-on; confirm the new testing-phase expiry; owner pass on the unit-ticket share wording.
+- **Last session**: 2026-11-24 (session 9, closed)
+- **Next session intent**: owner steps for accounts switch-on; confirm the new testing-phase expiry; owner pass on the unit-ticket share wording.
 
 ## Current Task
 P2-07 gap catch-up landed (`3a8fc44`, `f158f43`). Friday catch-up fetches the lowest missing TOTO draw by number, one request per run. Draw 4233 recovered by hand 2026-11-16.
@@ -321,3 +321,41 @@ None.
 - `SCOPE`: no "tap for sound" memory between visits (carried forward).
 
 2026-11-24 | delegable: 0 of 0 | reasons: none | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0
+
+
+## Session 9 close (2026-11-24)
+
+### Done
+- /open: HLQT OK, refresh backlog clear, config sync clean, handoffs 31 (0 open). Handoff-07 and 08 lessons already landed (repo items 10 and 13); only the `HL-___` placeholders remain in the handoff files.
+- Owner OK on item 4 (P2-07 gap fill): BRAIN row 4 now 🟢. The 20 Nov logs showed "no gaps" on both catch-up runs.
+- P4-4D-PHOTO (`65e26ff`, `specs/p4-4d-photo-check.md`): real 4D photo rows (fixture 10, draw 5553) through `/api/check`: nine entries, line C `BIG S'OUT` skipped with the sold-out warning, printed S$9 equals computed stake, "No win this time". Tests only, green on arrival, LEAD DIRECT `no-runner`. Gate `py -3 -m pytest tests/test_api.py -q` 56 passed; full suite 659 passed.
+- Owner rule picked up from the umbrella CLAUDE.md ("Asking the owner to choose"): numbered options, Q1/A for several questions.
+
+### Tally
+LOCAL 0 · L1 0 · L2 0 · LEAD DIRECT 1 (P4-4D-PHOTO, `no-runner`) · SPEC FAULT 0 · RESOURCE FAULT 0. Hand lessons landed: 0 (no Hand work, no corrections).
+`Delegable: 0 of 1`. Reason for zero: `no-runner` (gate already green).
+Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0).
+
+### Blocked
+| Type | What |
+| --- | --- |
+| input | Accounts switch-on: Cloudflare Email Sending for zenqi.cc, token, two env vars on Grayskull, then elevated `setup-web.ps1`. |
+| input | Confirm the new testing-phase expiry on Grayskull (`tools\testing-phase.ps1`). |
+| decision | Owner pass on unit-ticket share wording (unrounded-share assumption). |
+
+### Next
+1. Accounts switch-on (owner steps). 2. Testing-phase expiry read. 3. Owner pass on the unit-ticket share wording.
+
+### Merged
+None (work on `main`; one test commit, regression pass y at 659, real test exercised y on a real photo's rows).
+
+### Deployed
+None.
+
+### Discoveries
+- `MISS` (process): the 4D slice was framed on a misreading of `S'OUT` as a mangled `$1`; the rules reference (line 171) and `ticket_entry.py` already define it as a sold-out side with stake 0, so nothing was wrong in the parser. Caught before any code change. Read the rules reference before calling a printed marker a parser fault.
+- `MISS` (process): a `cd` inside a compound command carried over and ran the skill-pull check in Coffee_Crew_HQ; repeated from the project root. Use absolute paths or a subshell.
+- `SCOPE`: no real winning 4D photo exists, so the payout path from a photo-read ticket is untested (carried as a wish, not a task).
+- `SCOPE`: `HL-___` placeholders remain in `handoff-07.md` and `handoff-08.md`, so `handoff-triage` reports them as uncited; the lessons are landed as repo items 10 and 13.
+
+2026-11-24 | delegable: 0 of 1 | reasons: no-runner x1 | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0

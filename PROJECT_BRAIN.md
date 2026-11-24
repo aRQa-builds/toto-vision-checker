@@ -7,7 +7,7 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - **Deploy**: toto.zenqi.cc LIVE since 22 Oct 2026 (Cloudflare Tunnel sakura-hud, served from Grayskull); capture runs on Grayskull (Win 11 64-bit, Task Scheduler).
 - **Home**: D:\SakuraHydra\HavenPalms\Toto_Vision_Checker (mirror: claude.ai project "Toto OCR Check").
 - **Remote**: https://github.com/aRQa-builds/toto-vision-checker (PUBLIC, `main`, since 2026-10-25). Ticket photos, captured Singapore Pools pages (`tests/fixtures/*.jpg`, `*.html`, `screens/`) and `data/` are git-ignored and stay local; never add them. Public repo: no secrets, no `.env`.
-- **Version**: v0.2 (matcher + capture + optional accounts, 623 pytest + 9 node tests).
+- **Version**: v0.2 (matcher + capture + optional accounts, 659 pytest + 9 node tests).
 
 ## Architecture Decisions
 - Toto Groups 1-4 priced only from published draw amounts; 5-7 fixed ($50/$25/$10), published value overrides (cascade).
@@ -37,6 +37,7 @@ _LLM context file. Dense. No fluff. Written for cold re-entry._
 - Unit tickets (P6-15): Group TOTO share = entry win / n, iTOTO share = win x u / N, both unrounded floats shown via `money()` (assumption, owner may overrule). Pending stays None, never 0. PRICE check vs unit stake warns above S$0.10. The API check path must go through `scale_to_units`; built from specimen text only, no real photo.
 - Special/Hong Bao Toto draws (P2-07, 2026-11-16): the Friday `--catch-up` run fills TOTO draw-number holes between the lowest and highest stored draw, lowest first, one request per run, via the `?sppl` deep link. Never below the lowest stored draw (that would be a backfill). TOTO live; 4D gap check (`--catch-up`, P2-07-J, 17 Nov) coded and tested, its Friday 22:15/22:30 tasks are in `setup-schedule.ps1` but not yet registered. `store` never re-saves a draw already on file (P2-07-I).
 - Failure mode seen 9 Nov 2026: the results URL redirected to `toto-results.singaporepools.com.sg/en/index.html`, a promo landing page with no results block, so both runs failed to parse. The Friday gap fill recovers it; the page is kept in `data/failed/toto/`.
+- `S'OUT` on a 4D line is a sold-out side (stake 0), not a misread `$1` (rules reference line 171). A fully sold-out line is dropped with a warning, and the printed PRICE is the total of accepted stakes only: the draw 5553 photo prints S$9 for ten lettered lines because line C is sold out. Do not "fix" the parser for it (checked 24 Nov 2026, `tests/test_api.py` draw 5553 test).
 - Ticket layout (draw no. vs date) unknown until photos.
 
 ## Completed Milestones
@@ -55,7 +56,7 @@ Docs: docs/toto-4d-rules-reference.md, results-source-decision.md, ingest-schedu
 | 1 | Rules ref v0.2 | Toto/4D rules, cl. 5.16 verified | 🟢 | 0/178 mismatches |
 | 2 | M1 matcher | `toto.py` / `fourd.py` with golden tests | 🟢 | |
 | 3 | P2-03 capture | After-draw capture on Grayskull | 🟢 | Live since 21 Oct |
-| 4 | P2-07 gap fill | Friday catch-up fetches lowest missing draw by number (TOTO live; 4D coded 17 Nov) | 🟡 | 4D: register the two Friday 22:15/22:30 tasks on Grayskull; first live runs Fri 20 Nov |
+| 4 | P2-07 gap fill | Friday catch-up fetches lowest missing draw by number (TOTO and 4D live) | 🟢▲ | 4D tasks registered 17 Nov; 20 Nov logs show "no gaps" on both runs; owner OK 24 Nov |
 | 5 | P3-01 / P3-02 OCR + ticket parser | Vision OCR, photo parser | 🟢 | System 8-11 synthetic only |
 | 6 | P4-02 / P4-06 / P3-07 | Web checker, PWA, shared results from screenshots | 🟢 | Live at toto.zenqi.cc |
 | 7 | P4-09 / P4-10 | Manual entry, results screen reader | 🟢 | |
