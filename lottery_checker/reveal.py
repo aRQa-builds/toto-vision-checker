@@ -147,9 +147,18 @@ def build_reveal(result: TicketResult, printed_price: Optional[float] = None,
                        "Check back after Singapore Pools publishes it.")
     elif (result.total_won or 0) > CENT:
         state = "won"
-        headline = f"You won {money(result.total_won)}"
+        # Check if the share is a whole number of cents
+        is_whole_cent = (result.units is None
+                         or abs(result.total_won * 100 - round(result.total_won * 100)) <= 1e-6)
+        if not is_whole_cent:
+            headline = f"You won about {money(result.total_won)}"
+        else:
+            headline = f"You won {money(result.total_won)}"
         subline = f"Staked {money(result.total_stake)} across {len(result.draw_dates)} draw" + (
             "s" if len(result.draw_dates) != 1 else "")
+        # Append the disclaimer for non-whole cent shares
+        if not is_whole_cent:
+            subline += " The official payout may differ by a few cents."
     else:
         state = "no_win"
         headline = "No win this time"
