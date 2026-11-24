@@ -211,3 +211,15 @@ def test_unit_ticket_price_check_allows_ten_cents():
     assert build_reveal(r, printed_price=0.50, today=TODAY).stake.state == "mismatch"
     r1 = check_ticket([toto.TotoEntry("ordinary", (10, 11, 12, 13, 14, 15))], [toto_ref()])
     assert build_reveal(r1, printed_price=1.05, today=TODAY).stake.state == "mismatch"   # ordinary stays strict
+
+
+# P6-15-G: a unit share that is not a whole cent says "about" (owner ruling 2026-11-24)
+def test_unit_share_not_a_whole_cent_says_about():
+    rv = build_reveal(_units((1, 2, 3, 40, 41, 42), "group", 1, 3), today=TODAY)    # G7 S$10 / 3 = 3.333...
+    assert rv.state == "won" and rv.headline == "You won about S$3.33"
+    assert "Your share: 1 of 3 units (Group TOTO)" in rv.subline
+    assert rv.subline.endswith("The official payout may differ by a few cents.")
+    whole = build_reveal(_units((1, 2, 3, 40, 41, 42), "group", 1, 2), today=TODAY)  # S$5 exactly
+    assert whole.headline == "You won S$5" and "differ by a few cents" not in whole.subline
+    plain = build_reveal(check_ticket([toto.TotoEntry("ordinary", (1, 2, 3, 40, 41, 42))], [toto_ref()]), today=TODAY)
+    assert "differ by a few cents" not in plain.subline
