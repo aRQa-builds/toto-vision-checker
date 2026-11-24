@@ -486,3 +486,24 @@ def test_check_returns_the_share_and_its_wording(client):
 def test_unit_header_without_a_unit_line_is_refused_with_the_reason(client):
     r = client.post("/api/check", json={"text": GROUP_TICKET.replace("\nUNIT NUMBER: 1/2", "")})
     assert r.status_code == 422 and any("unit line" in p for p in r.json()["detail"]["problems"])
+
+
+# P4-4D-PHOTO: the real draw 5553 ticket (fixture 10) read from page-processed rows and checked.
+# Line C is "BIG S'OUT": sold out, stake 0, so the printed S$9 is nine accepted S$1 bets.
+DRAW_5553 = {"game": "4d", "draw_no": 5553, "draw_date": "2026-10-25",
+             "first": "1221", "second": "0171", "third": "3224",
+             "starter": ["1096", "1533", "4810", "5171", "6615", "6633", "6872", "7460", "7683", "9291"],
+             "consolation": ["0258", "0425", "1912", "1920", "2351", "3330", "3568", "3637", "7603", "9871"]}
+
+
+def test_real_4d_photo_rows_check_against_draw_5553_with_a_sold_out_line(data, client):
+    from lottery_checker.ticket_ocr import read_rows
+    (data / "draws" / "4d" / "5553.json").write_text(json.dumps(DRAW_5553))
+    rows = (FIX / "ocr" / "10_page.rows.txt").read_text(encoding="utf-8").splitlines()
+    r = client.post("/api/check", json={"text": read_rows(rows).text}).json()
+    t = r["ticket"]
+    assert [e["numbers"][0] for e in t["entries"]] == ["0310", "1310", "3310", "4310", "5310", "6310", "7310", "8310", "9310"]
+    assert any("2310" in w and "fully sold out" in w for w in t["warnings"])
+    assert t["printed_price"] == 9.0 and t["stake"] == 9 and not t["errors"]
+    assert r["reveal"]["state"] == "no_win" and r["reveal"]["headline"] == "No win this time"
+    assert r["reveal"]["stake"]["state"] == "match"
