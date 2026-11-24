@@ -365,4 +365,4 @@ None.
 ### Addendum 2 (after close): P6-15-G unit share wording
 - Owner ruling (option 1): a unit share that is not a whole cent reads "You won about S$x" and the subline ends "The official payout may differ by a few cents." Server-side text only (`reveal.py`); the web page renders it unchanged, so no `sw.js` bump.
 - `specs/p6-15-share-about.md`: red test `4f37898`, Hand attempt 1 green (`uncatalogued`), then Lead fix-up: Hand dropped the spec's `result.units is not None` clause (gate cannot see it). Candidate LOCAL; attribution at next close. Lesson landed: repo `hand-lessons.md` item 14. Full suite 660 passed.
-- Deployed: not yet; the live checker needs a python process restart to show it.
+- Deployed: 24 Nov 2026 ~11:26 local. Ended the old python process (41440); the keep-alive loop started a new one (105776) on 127.0.0.1:8765. Local and toto.zenqi.cc both answer 200.
