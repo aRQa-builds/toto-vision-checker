@@ -366,3 +366,12 @@ None.
 - Owner ruling (option 1): a unit share that is not a whole cent reads "You won about S$x" and the subline ends "The official payout may differ by a few cents." Server-side text only (`reveal.py`); the web page renders it unchanged, so no `sw.js` bump.
 - `specs/p6-15-share-about.md`: red test `4f37898`, Hand attempt 1 green (`uncatalogued`), then Lead fix-up: Hand dropped the spec's `result.units is not None` clause (gate cannot see it). Candidate LOCAL; attribution at next close. Lesson landed: repo `hand-lessons.md` item 14. Full suite 660 passed.
 - Deployed: 24 Nov 2026 ~11:26 local. Ended the old python process (41440); the keep-alive loop started a new one (105776) on 127.0.0.1:8765. Local and toto.zenqi.cc both answer 200.
+
+### Session 9 final tally (closing pass, 2026-11-24)
+- Attribution: P6-15-G is **LOCAL** (Hand attempt 1, gate green, uncatalogued). The Lead fix-up added a clause the spec named and the gate could not see; it is a lesson source, not a label change. P4-4D-PHOTO stays LEAD DIRECT `no-runner`. Testing-phase renewal is LEAD DIRECT (no gated slice).
+- Session tally: LOCAL 1 · L1 0 · L2 0 · LEAD DIRECT 2 · SPEC FAULT 0 · RESOURCE FAULT 0. `Delegable: 1 of 2` (P6-15-G delegable and delegated; P4-4D-PHOTO `no-runner`). Hand lessons landed: 1 (repo item 14).
+- Merged: None (work on `main`, 660 pytest passed, regression y). Deployed: P6-15-G wording, 24 Nov ~11:26 (web checker restarted).
+- Blocked: owner input only. Accounts switch-on (item 8); testing-phase renew or end at 1 Dec 11:10. Unit-share wording pass is closed (owner ruled "about").
+- Next: 1. Accounts switch-on (owner steps). 2. Testing phase decision 1 Dec. 3. Pull-or-skip of `.claude/commands/close.md` DIFF vs Coffee_Crew_HQ (unanswered).
+
+2026-11-24 | delegable: 1 of 2 | reasons: no-runner x1 | LOCAL: 1 · L1: 0 · L2: 0 (uncatalogued: 1) | lessons landed: 1
