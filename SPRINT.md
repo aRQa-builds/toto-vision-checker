@@ -340,11 +340,10 @@ Escalation: LOCAL 0 · L1 0 · L2 0 (uncatalogued 0).
 | Type | What |
 | --- | --- |
 | input | Accounts switch-on: Cloudflare Email Sending for zenqi.cc, token, two env vars on Grayskull, then elevated `setup-web.ps1`. |
-| input | Confirm the new testing-phase expiry on Grayskull (`tools\testing-phase.ps1`). |
 | decision | Owner pass on unit-ticket share wording (unrounded-share assumption). |
 
 ### Next
-1. Accounts switch-on (owner steps). 2. Testing-phase expiry read. 3. Owner pass on the unit-ticket share wording.
+1. Accounts switch-on (owner steps). 2. Owner pass on the unit-ticket share wording. 3. Testing phase renews or ends 1 Dec 11:10.
 
 ### Merged
 None (work on `main`; one test commit, regression pass y at 659, real test exercised y on a real photo's rows).
@@ -359,3 +358,6 @@ None.
 - `SCOPE`: `HL-___` placeholders remain in `handoff-07.md` and `handoff-08.md`, so `handoff-triage` reports them as uncited; the lessons are landed as repo items 10 and 13.
 
 2026-11-24 | delegable: 0 of 1 | reasons: no-runner x1 | LOCAL: 0 · L1: 0 · L2: 0 (uncatalogued: 0) | lessons landed: 0
+
+### Addendum (after close)
+- Testing phase: the 24 Nov renewal in the session 8 notes was not on disk here. `data/testing_phase.json` still ended 24 Nov 13:57 (3 renewals). Renewed from Grayskull (`-Renew`, owner pick 1): now on until Tue 1 Dec 2026 11:10 local, 4 renewals. LEAD DIRECT, no gated slice.

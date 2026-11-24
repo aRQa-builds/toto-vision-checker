@@ -63,6 +63,6 @@ Docs: docs/toto-4d-rules-reference.md, results-source-decision.md, ingest-schedu
 | 8 | P4-04 accounts | Optional magic-link accounts, saved history | 🟡 | Owner: Cloudflare Email setup + two env vars on Grayskull |
 | 9 | P5-01 stats | Owner-only descriptive stats | 🟢 | Public only after permission |
 | 10 | P6-15 Group TOTO / iTOTO | In v1: holder share, unit stake, OCR, reveal, web | 🟢 | Live since 17 Nov (checker restarted, typed Group TOTO and iTOTO tickets verified). Specimen text only: no real photo. Share is an unrounded float via `money()` (assumption) |
-| 11 | Testing phase | Higher photo limits | 🟢 | Renewed 24 Nov 2026; new expiry to confirm on Grayskull (`tools\testing-phase.ps1`) |
+| 11 | Testing phase | Higher photo limits | 🟢 | Renewed on Grayskull 24 Nov 2026 (4th renewal), on until 1 Dec 2026 11:10 local; decide renew or end then (`tools\testing-phase.ps1`) |
 | 12 | P2-05 / P2-06 / permission / P2-04 backfill | Alias, email, permission, backfill | 🔴 | Deferred by owner 16 Nov |
 | 13 | Paid tier / ads / Play listing | Monetisation | 🔴 | On hold until permission |
